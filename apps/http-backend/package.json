@@ -3,13 +3,16 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": " npx tsc -b",
+    "start": "node dist/index.js",
+    "dev": "pnpm run build && npm run start"
   },
-
-  "dependencies" :{
-    "@repo/typescript-config":"workspace:*"
+  "dependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@types/express": "^5.0.0",
+    "express": "^4.21.2"
   },
-
   "keywords": [],
   "author": "",
   "license": "ISC",
