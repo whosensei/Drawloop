@@ -18,6 +18,8 @@
     "node": ">=18"
   },
   "dependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.13.8",
     "dotenv": "^16.4.7"
   }
 }

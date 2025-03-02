@@ -3,7 +3,7 @@
         "//"
     ],
     "tasks": {
-        "builds": {
+        "build": {
             "outputs": [
                 "dist/**"
             ]
