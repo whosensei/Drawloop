@@ -4,10 +4,34 @@ import { JWT_SECRET } from "@repo/backend-common/config";
 import jwt from "jsonwebtoken";
 import { db } from "@repo/db";
 import { User } from "@repo/db/schema";
+import middleware from "./middleware";
 import { eq } from "drizzle-orm";
 const app = express();
 
 app.use(express.json());
+
+app.post("/signup", async (req: Request, res: Response) => {
+  const parsedData = SignupSchema.safeParse(req.body);
+  if (!parsedData.success) {
+    console.log(parsedData.error);
+    res.status(400).json({
+      message: "Invalid credentials",
+    });
+    return;
+  }
+  try {
+    await db.insert(User).values({
+      email: parsedData.data.email,
+      username: parsedData.data.username,
+      password: parsedData.data.password,
+    });
+    res.status(200).json({
+      message: "User successfully signed up",
+    });
+  } catch (error) {
+    console.log(error);
+  }
+});
 
 app.post("/signin", async (req: Request, res: Response) => {
   const parsedData = SigninSchema.safeParse(req.body);
@@ -30,16 +54,14 @@ app.post("/signin", async (req: Request, res: Response) => {
         message: "User not found",
       });
     }
-    console.log(user?.password);
-    console.log(parsedData.data.password);
 
     if (user?.password !== parsedData.data.password) {
       res.status(400).json({
         message: "Incorrect password",
       });
     }
-    const token = jwt.sign(parsedData.data.email, JWT_SECRET);
-    console.log(token);
+    const token = jwt.sign({ id: user?.id }, JWT_SECRET);
+    res.json(token);
 
     res.status(200).json({
       message: "User sucessfully signed up",
@@ -49,33 +71,15 @@ app.post("/signin", async (req: Request, res: Response) => {
   }
 });
 
+app.post("create-room",middleware,(req : Request,res :Response)=>{
+  //@ts-ignore
+  const userId = req.userId;
+
+})
+
 app.listen(3002, () => {
   console.log("server started on port 3002");
 });
 
-// // app.post("create-room",middleware,(req,res)=>{
 
-// // })
 
-app.post("/signup", async (req: Request, res: Response) => {
-    const parsedData = SignupSchema.safeParse(req.body);
-    if (!parsedData.success) {
-        console.log(parsedData.error);
-        res.status(400).json({
-            message: "Invalid credentials",
-        });
-        return;
-    }
-    try {
-        await db.insert(User).values({
-            email: parsedData.data.email,
-            username: parsedData.data.username,
-            password: parsedData.data.password,
-        });
-        res.status(200).json({
-            message: "User successfully signed up",
-        });
-    } catch (error) {
-        console.log(error);
-    }
-});

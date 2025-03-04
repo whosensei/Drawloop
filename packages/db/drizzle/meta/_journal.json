@@ -8,6 +8,13 @@
       "when": 1740855413988,
       "tag": "0000_numerous_mephistopheles",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1741109697280,
+      "tag": "0001_rainy_naoko",
+      "breakpoints": true
     }
   ]
 }

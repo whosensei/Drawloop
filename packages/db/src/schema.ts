@@ -2,7 +2,7 @@ import {pgTable ,integer,primaryKey,serial,text,varchar,timestamp} from "drizzle
 
 export const User = pgTable("Users" , {
     id :serial("user_id").primaryKey(),
-    email : varchar("email").notNull().unique(),
+    email : text("email").notNull().unique(),
     username : text("username").notNull(),
     password : text("password").notNull(), 
 })
