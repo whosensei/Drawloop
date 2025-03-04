@@ -30,6 +30,9 @@ app.post("/signup", async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.log(error);
+    res.status(500).json({
+      message: "Internal server error",
+    });
   }
 });
 
@@ -53,28 +56,38 @@ app.post("/signin", async (req: Request, res: Response) => {
       res.status(400).json({
         message: "User not found",
       });
+      return;
     }
 
     if (user?.password !== parsedData.data.password) {
       res.status(400).json({
         message: "Incorrect password",
       });
+      return;
     }
     const token = jwt.sign({ id: user?.id }, JWT_SECRET);
-    res.json(token);
-
     res.status(200).json({
-      message: "User sucessfully signed up",
+      token: token,
+      message: "User successfully signed in"
     });
   } catch (error) {
     console.log(error);
+    res.status(500).json({
+      message: "Internal server error",
+    });
   }
 });
 
-app.post("create-room",middleware,(req : Request,res :Response)=>{
+app.post("/create-room",middleware,(req : Request,res :Response)=>{
   //@ts-ignore
-  const userId = req.userId;
 
+  console.log("authorised");
+  const userId = req.userId;
+  res.json({
+    roomId : Math.floor(Math.random()*1000)+1,
+    userId : userId
+  })
+  return;
 })
 
 app.listen(3002, () => {
