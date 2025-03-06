@@ -3,7 +3,7 @@ import { SigninSchema, SignupSchema } from "@repo/common/zod";
 import { JWT_SECRET } from "@repo/backend-common/config";
 import jwt from "jsonwebtoken";
 import { db } from "@repo/db";
-import { User } from "@repo/db/schema";
+import { User, Room } from "@repo/db/schema";
 import middleware from "./middleware";
 import { eq } from "drizzle-orm";
 const app = express();
@@ -50,8 +50,6 @@ app.post("/signin", async (req: Request, res: Response) => {
       where: eq(User.email, parsedData.data.email),
     });
 
-    console.log("The email found is ", user?.email);
-
     if (!user) {
       res.status(400).json({
         message: "User not found",
@@ -67,8 +65,8 @@ app.post("/signin", async (req: Request, res: Response) => {
     }
     const token = jwt.sign({ id: user?.id }, JWT_SECRET);
     res.status(200).json({
-      token: token,
-      message: "User successfully signed in"
+      message: "User successfully signed in",
+      token: token
     });
   } catch (error) {
     console.log(error);
@@ -78,14 +76,23 @@ app.post("/signin", async (req: Request, res: Response) => {
   }
 });
 
-app.post("/create-room",middleware,(req : Request,res :Response)=>{
+app.post("/create-room",middleware,async(req : Request,res :Response)=>{
   //@ts-ignore
 
   console.log("authorised");
+  //@ts-ignore
   const userId = req.userId;
-  res.json({
-    roomId : Math.floor(Math.random()*1000)+1,
-    userId : userId
+  const roomId = Math.floor(Math.random() * 1000) + 1
+  const roomName = `room${roomId}`
+
+  await db.insert(Room).values({
+    RoomId :roomId,
+    name : roomName
+  })
+  res.status(200).json({
+    message:"Room created successfully",
+    roomId : roomId,
+    name : roomName
   })
   return;
 })
@@ -93,6 +100,4 @@ app.post("/create-room",middleware,(req : Request,res :Response)=>{
 app.listen(3002, () => {
   console.log("server started on port 3002");
 });
-
-
 
