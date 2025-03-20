@@ -15,6 +15,13 @@
       "when": 1741109697280,
       "tag": "0001_rainy_naoko",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1742486148855,
+      "tag": "0002_mean_blacklash",
+      "breakpoints": true
     }
   ]
 }
