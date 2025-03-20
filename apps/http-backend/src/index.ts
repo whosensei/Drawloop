@@ -86,8 +86,9 @@ app.post("/create-room",middleware,async(req : Request,res :Response)=>{
   const roomName = `room${roomId}`
 
   await db.insert(Room).values({
-    RoomId :roomId,
-    name : roomName
+    id :roomId,
+    name : roomName,
+    adminId : userId
   })
   res.status(200).json({
     message:"Room created successfully",

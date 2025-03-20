@@ -18,7 +18,7 @@ export default function middleware(req :Request,res :Response,next :NextFunction
     try{
         if(decodedData){
             // @ts-ignore
-            req.userId= decodedData.id;
+            req.userId = decodedData.id;
             next();
         }else{
             console.log("Unauthorised")
