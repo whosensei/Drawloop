@@ -3,9 +3,9 @@ import { SigninSchema, SignupSchema } from "@repo/common/zod";
 import { JWT_SECRET } from "@repo/backend-common/config";
 import jwt from "jsonwebtoken";
 import { db } from "@repo/db";
-import { User, Room } from "@repo/db/schema";
+import { User, Room ,chats} from "@repo/db/schema";
 import middleware from "./middleware";
-import { eq } from "drizzle-orm";
+import { eq,desc } from "drizzle-orm";
 const app = express();
 
 app.use(express.json());
@@ -96,6 +96,31 @@ app.post("/create-room",middleware,async(req : Request,res :Response)=>{
     name : roomName
   })
   return;
+})
+
+app.post("/chats/:roomId", async(req:Request , res : Response)=>{
+
+  const roomId = req.params.roomId;
+  const messages = await db.query.chats.findMany({
+    where : eq(chats.roomId,Number(roomId)),
+    orderBy : [desc(chats.createdAt)],
+    limit : 100
+  })
+  res.json({
+    messages
+  })
+})
+
+app.post("/room/:slug",async(req:Request,res:Response)=>{
+  const slug  = req.params.slug;
+
+  const roomId = await db.query.Room.findFirst({
+    where : eq(Room.slug,Number(slug))
+  })
+
+  res.json({
+    roomId
+  })
 })
 
 app.listen(3002, () => {
