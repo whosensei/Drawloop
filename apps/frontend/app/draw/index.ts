@@ -82,7 +82,7 @@ export async function initDraw(canvas: HTMLCanvasElement ,roomId :string) {
 
     async function getExistingShapes(roomId :string){
         const res = await axios.get(`${process.env.HTTP_BACKEND}/chats/${roomId}`);
-        const messages = res.data.message
+        const messages = res.data.messages;
 
         const shapes = messages.map((x :{message :string;})=>{
             const parsedData = JSON.parse(x.message)
