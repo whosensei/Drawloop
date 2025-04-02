@@ -10,7 +10,7 @@ export default function Canvas(){
 
         if(Canvasref.current){
             const canvas = Canvasref.current
-            initDraw(canvas)
+            initDraw(canvas,roomId)
         }
 
     },[Canvasref])

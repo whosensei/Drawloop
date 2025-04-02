@@ -1,7 +1,9 @@
-import { Sree_Krushnadevaraya } from "next/font/google";
+import axios from "axios"
 import { types } from "util";
+import dotenv from "dotenv"
+dotenv.config({ path : "../../../../.env"});
 
-export function initDraw(canvas: HTMLCanvasElement) {
+export async function initDraw(canvas: HTMLCanvasElement ,roomId :string) {
 
     const ctx = canvas.getContext("2d");
 
@@ -24,8 +26,7 @@ export function initDraw(canvas: HTMLCanvasElement) {
         startY: number
     }
 
-
-    const ExistingShapes: shapes[] =[];
+    const ExistingShapes: shapes[] = await getExistingShapes(roomId);
     
     clearCanvas(ExistingShapes,ctx,canvas)
     
@@ -77,5 +78,17 @@ export function initDraw(canvas: HTMLCanvasElement) {
                 console.log("shape")
             }
         })
+    }
+
+    async function getExistingShapes(roomId :string){
+        const res = await axios.get(`${process.env.HTTP_BACKEND}/chats/${roomId}`);
+        const messages = res.data.message
+
+        const shapes = messages.map((x :{message :string;})=>{
+            const parsedData = JSON.parse(x.message)
+            return parsedData
+        })
+
+        return shapes
     }
 }
