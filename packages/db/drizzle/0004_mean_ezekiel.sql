@@ -1,0 +1,1 @@
+ALTER TABLE "rooms" ALTER COLUMN "slug" SET DATA TYPE text;

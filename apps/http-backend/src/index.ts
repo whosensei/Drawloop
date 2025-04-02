@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 import { db } from "@repo/db";
 import { User, Room ,chats} from "@repo/db/schema";
 import middleware from "./middleware";
-import { eq,desc } from "drizzle-orm";
+import { eq,desc} from "drizzle-orm";
 const app = express();
 
 app.use(express.json());
@@ -115,7 +115,7 @@ app.post("/room/:slug",async(req:Request,res:Response)=>{
   const slug  = req.params.slug;
 
   const roomId = await db.query.Room.findFirst({
-    where : eq(Room.slug,Number(slug))
+    where : eq(Room.slug,slug ?? "")
   })
 
   res.json({

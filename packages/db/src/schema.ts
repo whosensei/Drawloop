@@ -14,7 +14,7 @@ export const Room = pgTable("rooms", {
     name: text("room_name").notNull(),
     createdAt: timestamp("created_at"),
     adminId: integer("admin_id").notNull(),
-    slug : integer("slug").unique()
+    slug : text("slug").unique()
 })
 
 export const chats = pgTable("chats", {
