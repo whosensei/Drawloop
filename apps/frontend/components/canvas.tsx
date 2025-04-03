@@ -1,0 +1,30 @@
+"use client"
+import { useEffect, useRef } from "react";
+import { initDraw } from "@/app/draw";
+// import { WebSocket } from "ws";
+
+
+export function Canvas({ roomId, socket }:
+    {
+        socket: WebSocket,
+        roomId: string
+    }) {
+
+
+    const Canvasref = useRef(null);
+
+    useEffect(() => {
+
+        if (Canvasref.current) {
+            const canvas = Canvasref.current
+            initDraw(canvas, roomId, socket)
+        }
+
+    }, [Canvasref])
+
+    return (
+        <div>
+            <canvas ref={Canvasref} width={2000} height={1000}></canvas>
+        </div>
+    )
+}

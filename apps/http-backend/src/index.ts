@@ -7,8 +7,13 @@ import { User, Room ,chats} from "@repo/db/schema";
 import middleware from "./middleware";
 import { eq,desc} from "drizzle-orm";
 const app = express();
+import cors from "cors"
 
 app.use(express.json());
+app.use(cors({
+  origin: ['http://localhost:3000'],
+  credentials: true
+}));
 
 app.post("/signup", async (req: Request, res: Response) => {
   const parsedData = SignupSchema.safeParse(req.body);
@@ -98,7 +103,7 @@ app.post("/create-room",middleware,async(req : Request,res :Response)=>{
   return;
 })
 
-app.post("/chats/:roomId", async(req:Request , res : Response)=>{
+app.get("/chats/:roomId", async(req:Request , res : Response)=>{
 
   const roomId = req.params.roomId;
   const messages = await db.query.chats.findMany({
@@ -111,7 +116,7 @@ app.post("/chats/:roomId", async(req:Request , res : Response)=>{
   })
 })
 
-app.post("/room/:slug",async(req:Request,res:Response)=>{
+app.get("/room/:slug",async(req:Request,res:Response)=>{
   const slug  = req.params.slug;
 
   const roomId = await db.query.Room.findFirst({

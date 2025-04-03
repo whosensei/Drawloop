@@ -1,9 +1,8 @@
 import axios from "axios"
 import { types } from "util";
-import dotenv from "dotenv"
-dotenv.config({ path : "../../../../.env"});
+// import { WebSocket } from "ws";
 
-export async function initDraw(canvas: HTMLCanvasElement ,roomId :string) {
+export async function initDraw(canvas: HTMLCanvasElement ,roomId :string,socket : WebSocket) {
 
     const ctx = canvas.getContext("2d");
 
@@ -28,6 +27,17 @@ export async function initDraw(canvas: HTMLCanvasElement ,roomId :string) {
 
     const ExistingShapes: shapes[] = await getExistingShapes(roomId);
     
+    socket.onmessage = (event)=>{
+        console.log("ye chal raha hai")
+        const msg = JSON.parse(event.data);
+        if(msg.type === "chat"){
+            const shapedata = JSON.parse(msg.message);
+            console.log(shapedata)
+            ExistingShapes.push(shapedata.shape)
+            clearCanvas(ExistingShapes,ctx,canvas)
+        }
+    }
+    
     clearCanvas(ExistingShapes,ctx,canvas)
     
     let clicked = false;
@@ -45,13 +55,23 @@ export async function initDraw(canvas: HTMLCanvasElement ,roomId :string) {
         e.clientX
         e.clientY
 
-        ExistingShapes.push({
+        const shape :shapes = {
             type:"rect",
             StartX,
             StartY,
             width : e.clientX-StartX,
             height : e.clientY-StartY
+        }
+
+        ExistingShapes.push(shape)
+
+        const data = JSON.stringify({
+            type : "chat",
+            message : JSON.stringify({shape}),
+            roomId
         })
+
+        socket.send(data)
 
     })
 
@@ -81,12 +101,12 @@ export async function initDraw(canvas: HTMLCanvasElement ,roomId :string) {
     }
 
     async function getExistingShapes(roomId :string){
-        const res = await axios.get(`${process.env.HTTP_BACKEND}/chats/${roomId}`);
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_HTTP_BACKEND!}/chats/${roomId}`);
         const messages = res.data.messages;
 
-        const shapes = messages.map((x :{message :string;})=>{
+        const shapes = messages.map((x :{message :string})=>{
             const parsedData = JSON.parse(x.message)
-            return parsedData
+            return parsedData.shape
         })
 
         return shapes
