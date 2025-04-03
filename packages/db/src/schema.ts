@@ -12,7 +12,7 @@ export const User = pgTable("users", {
 export const Room = pgTable("rooms", {
     id: serial("room_id").primaryKey(),
     name: text("room_name").notNull(),
-    createdAt: timestamp("created_at"),
+    createdAt: timestamp("created_at").defaultNow(),
     adminId: integer("admin_id").notNull(),
     slug : text("slug").unique()
 })
@@ -22,7 +22,7 @@ export const chats = pgTable("chats", {
     roomId: integer("room_id").notNull(),
     userId: integer("user_id").notNull(),
     message: text("message").notNull(),
-    createdAt: timestamp("created_at"),
+    createdAt: timestamp("created_at").defaultNow(),
 })
 
 export const usersRelations = relations(User, ({ many }) => ({
