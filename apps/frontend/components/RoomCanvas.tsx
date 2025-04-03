@@ -17,7 +17,7 @@ export default function RoomCanvas({roomId} :{roomId :string}){
         ws.onopen = () =>{
             setsocket(ws)
             const data =JSON.stringify({
-                type : "join_room",
+                type : "join",
                 roomId
             })
             console.log(data)

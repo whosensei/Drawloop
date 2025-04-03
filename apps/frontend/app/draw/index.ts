@@ -72,7 +72,6 @@ export async function initDraw(canvas: HTMLCanvasElement ,roomId :string,socket 
         })
 
         socket.send(data)
-
     })
 
     canvas.addEventListener("mousemove", (e) => {
