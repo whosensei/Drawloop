@@ -2,7 +2,7 @@ import axios from "axios"
 import { types } from "util";
 // import { WebSocket } from "ws";
 
-export async function initDraw(canvas: HTMLCanvasElement ,roomId :string,socket : WebSocket) {
+export async function initDraw(canvas: HTMLCanvasElement ,roomId :string,socket : WebSocket, tool : string | null) {
 
     const ctx = canvas.getContext("2d");
 
@@ -20,15 +20,21 @@ export async function initDraw(canvas: HTMLCanvasElement ,roomId :string,socket 
     } |
     {
         type: "circle",
-        radius: number,
-        startX: number,
-        startY: number
+        StartX: number,
+        StartY: number,
+        radius: number
+    } |
+    {
+        type: "line",
+        StartX : number,
+        StartY : number,
+        width : number,
+        height : number
     }
 
     const ExistingShapes: shapes[] = await getExistingShapes(roomId);
     
     socket.onmessage = (event)=>{
-        console.log("ye chal raha hai")
         const msg = JSON.parse(event.data);
         if(msg.type === "chat"){
             const shapedata = JSON.parse(msg.message);
@@ -56,14 +62,13 @@ export async function initDraw(canvas: HTMLCanvasElement ,roomId :string,socket 
         e.clientY
 
         const shape :shapes = {
-            type:"rect",
-            StartX,
-            StartY,
-            width : e.clientX-StartX,
-            height : e.clientY-StartY
+                type:"rect",
+                StartX,
+                StartY,
+                width : e.clientX-StartX,
+                height : e.clientY-StartY
         }
-
-        ExistingShapes.push(shape)
+        // ExistingShapes.push(shape)
 
         const data = JSON.stringify({
             type : "chat",
@@ -78,9 +83,26 @@ export async function initDraw(canvas: HTMLCanvasElement ,roomId :string,socket 
         if (clicked) {
             const width: number = e.clientX - StartX;
             const height: number = e.clientY - StartY;
+            const radius : number = Math.sqrt(StartX*StartX + StartY*StartY)
             clearCanvas(ExistingShapes,ctx,canvas)
             ctx.strokeStyle = "rgba(255,255,255)"
-            ctx.strokeRect(StartX, StartY, width, height)
+            console.log(tool)
+            switch(tool){
+                case "rectangle":
+                    ctx.strokeRect(StartX, StartY, width, height)
+                    break;
+                case "circle":
+                    ctx.beginPath();
+                    ctx.arc(StartX,StartY,radius,0, 2 * Math.PI);
+                    ctx.stroke();
+                    break;
+                case "line":
+                    ctx.beginPath();
+                    ctx.moveTo(StartX,StartY)
+                    ctx.lineTo(e.clientX,e.clientY)
+                    ctx.stroke()   
+                    break; 
+            }
         }
     })
 
@@ -94,7 +116,16 @@ export async function initDraw(canvas: HTMLCanvasElement ,roomId :string,socket 
                 ctx.strokeStyle = "rgba(255,255,255)"
                 ctx.strokeRect(shape.StartX,shape.StartY,shape.width,shape.height)
             }else if(shape.type==="circle"){
-                console.log("shape")
+                ctx.beginPath();
+                ctx.strokeStyle = "rgba(255,255,255)"
+                ctx.arc(shape.StartX,shape.StartY,shape.radius,0, 2 * Math.PI);
+                ctx.stroke()
+            }else if(shape.type==="line"){
+                ctx.beginPath();
+                ctx.strokeStyle = "rgba(255,255,255)"
+                ctx.moveTo(shape.StartX,shape.StartY)
+                ctx.lineTo(shape.StartX+shape.width,shape.StartY+shape.height)
+                ctx.stroke()
             }
         })
     }
