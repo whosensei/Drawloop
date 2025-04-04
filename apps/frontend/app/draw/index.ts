@@ -83,7 +83,7 @@ export async function initDraw(canvas: HTMLCanvasElement ,roomId :string,socket 
         if (clicked) {
             const width: number = e.clientX - StartX;
             const height: number = e.clientY - StartY;
-            const radius : number = Math.sqrt(StartX*StartX + StartY*StartY)
+            const radius : number = Math.sqrt((e.clientX-StartX)**2 + (e.clientY-StartY)**2)
             clearCanvas(ExistingShapes,ctx,canvas)
             ctx.strokeStyle = "rgba(255,255,255)"
             console.log(tool)
