@@ -30,7 +30,7 @@ interface DrawingToolbarProps {
 
 export default function DrawingToolbar({ selectedTool, setSelectedTool }: DrawingToolbarProps) {
     const [selectedColor, setSelectedColor] = useState("#000000")
-    const [customColor, setCustomColor] = useState("#000000")
+    // const [customColor, setCustomColor] = useState("#000000")
     const [strokeWidth, setStrokeWidth] = useState(3)
 
 
@@ -40,7 +40,7 @@ export default function DrawingToolbar({ selectedTool, setSelectedTool }: Drawin
 
     const handleColorChange = (color: string) => {
         setSelectedColor(color)
-        setCustomColor(color)
+        // setCustomColor(color)
     }
 
     const handleClearAll = () => {
@@ -158,7 +158,7 @@ export default function DrawingToolbar({ selectedTool, setSelectedTool }: Drawin
                             </button>
                         ))}
                     </div>
-                    <div className="p-2 border-t">
+                    {/* <div className="p-2 border-t">
                         <Popover>
                             <PopoverTrigger asChild>
                                 <Button variant="outline" className="w-full justify-between">
@@ -188,7 +188,7 @@ export default function DrawingToolbar({ selectedTool, setSelectedTool }: Drawin
                                 </div>
                             </PopoverContent>
                         </Popover>
-                    </div>
+                    </div> */}
                 </DropdownMenuContent>
             </DropdownMenu>
         </div>
