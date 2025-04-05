@@ -2,7 +2,7 @@ import axios from "axios"
 import { types } from "util";
 // import { WebSocket } from "ws";
 
-export async function initDraw(canvas: HTMLCanvasElement ,roomId :string,socket : WebSocket, tool : string | null) {
+export async function initDraw(canvas: HTMLCanvasElement ,roomId :string,socket : WebSocket, tool : string | null ,color :string) {
 
     const ctx = canvas.getContext("2d");
 
@@ -17,12 +17,14 @@ export async function initDraw(canvas: HTMLCanvasElement ,roomId :string,socket 
         StartY: number
         width: number,
         height: number,
+        color: string
     } |
     {
         type: "circle",
         StartX: number,
         StartY: number,
-        radius: number
+        radius: number,
+        color:string
     } |
     {
         type: "line",
@@ -30,6 +32,7 @@ export async function initDraw(canvas: HTMLCanvasElement ,roomId :string,socket 
         StartY : number,
         width : number,
         height : number
+        color : string
     }
 
     const ExistingShapes: shapes[] = await getExistingShapes(roomId);
@@ -61,14 +64,39 @@ export async function initDraw(canvas: HTMLCanvasElement ,roomId :string,socket 
         e.clientX
         e.clientY
 
-        const shape :shapes = {
+        let shape : shapes | null = null 
+
+        if(tool === "rectangle"){
+         shape = {
                 type:"rect",
                 StartX,
                 StartY,
                 width : e.clientX-StartX,
-                height : e.clientY-StartY
+                height : e.clientY-StartY,
+                color : color
+            }
+        }else if(tool === "circle"){
+             shape  = {
+                type:"circle",
+                StartX,
+                StartY,
+                radius : Math.sqrt((e.clientX-StartX)**2 + (e.clientY-StartY)**2),
+                color : color
+            }
+        }else if(tool === "line"){
+             shape = {
+                type:"line",
+                StartX,
+                StartY,
+                width : e.clientX-StartX,
+                height : e.clientY-StartY,
+                color : color
+            }
         }
-        // ExistingShapes.push(shape)
+
+        if(!shape){
+            return
+        }
 
         const data = JSON.stringify({
             type : "chat",
@@ -85,7 +113,7 @@ export async function initDraw(canvas: HTMLCanvasElement ,roomId :string,socket 
             const height: number = e.clientY - StartY;
             const radius : number = Math.sqrt((e.clientX-StartX)**2 + (e.clientY-StartY)**2)
             clearCanvas(ExistingShapes,ctx,canvas)
-            ctx.strokeStyle = "rgba(255,255,255)"
+            ctx.strokeStyle = color
             console.log(tool)
             switch(tool){
                 case "rectangle":
@@ -108,21 +136,21 @@ export async function initDraw(canvas: HTMLCanvasElement ,roomId :string,socket 
 
     function clearCanvas(ExistingShapes :shapes[],ctx: CanvasRenderingContext2D ,canvas :HTMLCanvasElement) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = "rgba(0,0,0)"
+        ctx.fillStyle = "rgba(255,255,255)"
         ctx.fillRect(0, 0, canvas.width, canvas.height)
         
         ExistingShapes.map((shape)=>{
             if(shape.type === "rect"){
-                ctx.strokeStyle = "rgba(255,255,255)"
+                ctx.strokeStyle = shape.color
                 ctx.strokeRect(shape.StartX,shape.StartY,shape.width,shape.height)
             }else if(shape.type==="circle"){
                 ctx.beginPath();
-                ctx.strokeStyle = "rgba(255,255,255)"
+                ctx.strokeStyle = shape.color
                 ctx.arc(shape.StartX,shape.StartY,shape.radius,0, 2 * Math.PI);
                 ctx.stroke()
             }else if(shape.type==="line"){
                 ctx.beginPath();
-                ctx.strokeStyle = "rgba(255,255,255)"
+                ctx.strokeStyle = shape.color
                 ctx.moveTo(shape.StartX,shape.StartY)
                 ctx.lineTo(shape.StartX+shape.width,shape.StartY+shape.height)
                 ctx.stroke()

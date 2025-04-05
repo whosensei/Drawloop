@@ -26,10 +26,12 @@ const predefinedColors = [
 interface DrawingToolbarProps {
     selectedTool: Tool;
     setSelectedTool: (tool: Tool) => void;
+    selectedColor : string,
+    setSelectedColor : (color : string) => void
 }
 
-export default function DrawingToolbar({ selectedTool, setSelectedTool }: DrawingToolbarProps) {
-    const [selectedColor, setSelectedColor] = useState("#000000")
+export default function DrawingToolbar({ selectedTool, setSelectedTool, selectedColor, setSelectedColor }: DrawingToolbarProps) {
+    // const [selectedColor, setSelectedColor] = useState("#000000")
     // const [customColor, setCustomColor] = useState("#000000")
     const [strokeWidth, setStrokeWidth] = useState(3)
 

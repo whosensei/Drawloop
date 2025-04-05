@@ -16,6 +16,8 @@ export function Canvas({ roomId, socket }:
 
     type Tool = "pen"|"line" | "circle" | "rectangle" | "eraser" | "text" | null;
     const [selectedTool, setSelectedTool] = useState<Tool>(null)
+    const [selectedColor, setSelectedColor] = useState("#000000")
+
 
     const Canvasref = useRef(null);
 
@@ -23,17 +25,17 @@ export function Canvas({ roomId, socket }:
 
         if (Canvasref.current) {
             const canvas = Canvasref.current
-            initDraw(canvas, roomId, socket, selectedTool)
+            initDraw(canvas, roomId, socket, selectedTool,selectedColor)
         }
 
-    }, [Canvasref, selectedTool])
+    }, [Canvasref, selectedTool,selectedColor])
 
     return (
         <div>
             <canvas ref={Canvasref} width={2000} height={1000}></canvas>
             <div className="absolute top-1/128 left-1/2 -translate-x-1/2">
                 <div className="w-full max-w-3xl">
-                    <DrawingToolbar selectedTool={selectedTool} setSelectedTool={setSelectedTool} />
+                    <DrawingToolbar selectedTool={selectedTool} setSelectedTool={setSelectedTool} selectedColor={selectedColor} setSelectedColor={setSelectedColor} />
                 </div>
             </div>
         </div>
