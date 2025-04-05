@@ -22,7 +22,7 @@ export function Canvas({ roomId, socket }:
     const Canvasref = useRef(null);
 
     useEffect(() => {
-
+        
         if (Canvasref.current) {
             const canvas = Canvasref.current
             initDraw(canvas, roomId, socket, selectedTool,selectedColor)
