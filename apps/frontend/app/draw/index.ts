@@ -55,14 +55,14 @@ export async function initDraw(canvas: HTMLCanvasElement ,roomId :string,socket 
     let StartX: number
     let StartY: number
 
-    function handleMouseDown(e:MouseEvent){
+    canvas.addEventListener("mousedown", (e) => {
     
         clicked = true
         StartX = e.clientX;
         StartY = e.clientY;
-    }
+    })
 
-    function handleMouseUp(e:MouseEvent){
+    canvas.addEventListener("mouseup",(e)=>{
         clicked = false
         e.clientX
         e.clientY
@@ -108,9 +108,9 @@ export async function initDraw(canvas: HTMLCanvasElement ,roomId :string,socket 
         })
 
         socket.send(data)
-    }
+    })
 
-    function handleMouseMove(e:MouseEvent){
+    canvas.addEventListener("mousemove", (e) => {
         if (clicked) {
             const width: number = e.clientX - StartX;
             const height: number = e.clientY - StartY;
@@ -135,7 +135,7 @@ export async function initDraw(canvas: HTMLCanvasElement ,roomId :string,socket 
                     break; 
             }
         }
-    }
+    })
 
     function clearCanvas(ExistingShapes :shapes[],ctx: CanvasRenderingContext2D ,canvas :HTMLCanvasElement) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -171,20 +171,5 @@ export async function initDraw(canvas: HTMLCanvasElement ,roomId :string,socket 
         })
 
         return shapes
-    }
-
-    canvas.removeEventListener("mousedown",handleMouseDown)
-    canvas.removeEventListener("mouseup",handleMouseUp)
-    canvas.removeEventListener("mousemove",handleMouseMove)
-
-    canvas.addEventListener("mousedown",handleMouseDown)
-    canvas.addEventListener("mouseup",handleMouseUp)
-    canvas.addEventListener("mousemove",handleMouseMove)
-
-    //cleanup function
-    return ()=>{
-        canvas.removeEventListener("mousedown",handleMouseDown)
-        canvas.removeEventListener("mouseup",handleMouseUp)
-        canvas.removeEventListener("mousemove",handleMouseMove)
     }
 }
