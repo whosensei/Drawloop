@@ -62,7 +62,7 @@ export default function SignIn() {
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.05] via-transparent to-rose-500/[0.05] blur-3xl" />
 
             <div className="relative z-10 w-full max-w-md mx-auto px-4 py-8">
-                <motion.div
+                {/* <motion.div
                     custom={0}
                     variants={fadeUpVariants}
                     initial="hidden"
@@ -73,7 +73,7 @@ export default function SignIn() {
                         <Image src="/placeholder.svg?height=20&width=20" alt="Logo" width={20} height={20} />
                         <span className="text-sm text-white/60 tracking-wide">Sketch Board</span>
                     </div>
-                </motion.div>
+                </motion.div> */}
 
                 <motion.div
                     custom={1}
