@@ -12,6 +12,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Toggle } from "@/components/ui/toggle"
+import { db , } from "@repo/db";
+import { User} from "@repo/db/schema";
+import axios from "axios"
+
+
 
 export default function SignUp() {
     const [showPassword, setShowPassword] = useState(false)
@@ -25,10 +30,18 @@ export default function SignUp() {
         setIsLoading(true)
 
         // Simulate registration delay
-        setTimeout(() => {
+        setTimeout(async () => {
             setIsLoading(false)
-            // In a real app, you would handle registration here
-            window.location.href = "/dashboard"
+            try{
+                const message = await axios.post(`${process.env.NEXT_PUBLIC_HTTP_BACKEND}/signup`,{
+                    email :email,
+                    username :username,
+                    password: password
+                })
+            }catch{
+                console.log("failed to send data to backend")
+            }
+            // window.location.href = "/dashboard"
         }, 1500)
     }
 
@@ -63,18 +76,6 @@ export default function SignUp() {
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.05] via-transparent to-rose-500/[0.05] blur-3xl" />
 
             <div className="relative z-10 w-full max-w-md mx-auto px-4 py-8">
-                {/* <motion.div
-                    custom={0}
-                    variants={fadeUpVariants}
-                    initial="hidden"
-                    animate="visible"
-                    className="flex justify-center mb-8"
-                >
-                    <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.08]">
-                        <Image src="/placeholder.svg?height=20&width=20" alt="Logo" width={20} height={20} />
-                        <span className="text-sm text-white/60 tracking-wide">Sketch Board</span>
-                    </div>
-                </motion.div> */}
 
                 <motion.div
                     custom={1}
