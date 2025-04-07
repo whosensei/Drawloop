@@ -30,9 +30,12 @@ app.post("/signup", async (req: Request, res: Response) => {
       username: parsedData.data.username,
       password: parsedData.data.password,
     });
+    
     res.status(200).json({
       message: "User successfully signed up",
     });
+
+
   } catch (error) {
     console.log(error);
     res.status(500).json({
@@ -54,16 +57,14 @@ app.post("/signin", async (req: Request, res: Response) => {
     const user = await db.query.User.findFirst({
       where: eq(User.email, parsedData.data.email),
     });
-
     if (!user) {
-      res.status(400).json({
+      res.status(401).json({
         message: "User not found",
       });
       return;
     }
-
     if (user?.password !== parsedData.data.password) {
-      res.status(400).json({
+      res.status(402).json({
         message: "Incorrect password",
       });
       return;
@@ -73,6 +74,7 @@ app.post("/signin", async (req: Request, res: Response) => {
       message: "User successfully signed in",
       token: token
     });
+
   } catch (error) {
     console.log(error);
     res.status(500).json({

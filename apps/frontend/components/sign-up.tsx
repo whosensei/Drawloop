@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Toggle } from "@/components/ui/toggle"
+import { useToast } from "@/components/ui/use-toast"
+
 import { db , } from "@repo/db";
 import { User} from "@repo/db/schema";
 import axios from "axios"
@@ -24,6 +26,7 @@ export default function SignUp() {
     const [username, setUsername] = useState("")
     const [password, setPassword] = useState("")
     const [isLoading, setIsLoading] = useState(false)
+    const { toast } = useToast()
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -38,8 +41,37 @@ export default function SignUp() {
                     username :username,
                     password: password
                 })
-            }catch{
-                console.log("failed to send data to backend")
+
+                if(message.status === 200){
+                    // console.log(message.data)
+                    toast({
+                        variant: "success",
+                        title: message.data.message,
+                        description: "Welcome draww.io.",
+                      })
+                    }
+            }catch(error){
+                if (axios.isAxiosError(error)) {
+                    // Get the error response data
+                    const errorMessage = error.response?.data?.message || "Failed to sign up";
+
+                    toast({
+                        variant: "error",
+                        title: "Signup Failed",
+                        description: errorMessage,
+                    })
+                    
+                } else {
+                    // For non-axios errors
+                    toast({
+                        variant: "error",
+                        title: "Something went wrong",
+                        description: "Please try again later.",
+                    })
+
+                }
+            } finally {
+                setIsLoading(false)
             }
             // window.location.href = "/dashboard"
         }, 1500)

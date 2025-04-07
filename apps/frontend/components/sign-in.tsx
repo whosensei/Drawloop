@@ -6,41 +6,113 @@ import { useState } from "react"
 import { motion } from "framer-motion"
 import Link from "next/link"
 import Image from "next/image"
-import { ArrowLeft, Eye, EyeOff } from "lucide-react"
+import { ArrowLeft, Eye, EyeOff, Info } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Toggle } from "@/components/ui/toggle"
+import { useToast } from "@/components/ui/use-toast"
 import axios from "axios"
-import { db } from "@repo/db";
-import { User} from "@repo/db/schema";
-import {eq,and} from "drizzle-orm"
+// Add this new component for test credentials
+function TestCredentials({ onUseTestAccount }: { onUseTestAccount: () => void }) {
+    return (
+        <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm p-4 mb-6">
+            <div className="flex items-center gap-2 mb-3">
+                <Info className="h-4 w-4 text-indigo-400" />
+                <h3 className="text-sm font-medium text-white">Demo Credentials</h3>
+            </div>
+
+            <div className="space-y-2 mb-4">
+                <div className="grid grid-cols-[80px_1fr] text-sm">
+                    <span className="text-white/60">Email:</span>
+                    <code className="font-Open_Sans text-indigo-300">demo@sketchboard.com</code>
+                </div>
+                <div className="grid grid-cols-[80px_1fr] text-sm">
+                    <span className="text-white/60">Password:</span>
+                    <code className="font-Open_Sans text-indigo-300">demo1234</code>
+                </div>
+            </div>
+
+            <Button
+                variant="outline"
+                size="sm"
+                className="w-full text-xs border-indigo-500/20 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300"
+                onClick={onUseTestAccount}
+            >
+                Use Test Account
+            </Button>
+
+            <p className="text-[11px] text-white/40 mt-3 text-center">For demonstration purposes only</p>
+        </div>
+    )
+}
 
 export default function SignIn() {
     const [showPassword, setShowPassword] = useState(false)
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [isLoading, setIsLoading] = useState(false)
+    const { toast } = useToast()
+
+    // Add this function to handle using test credentials
+    const handleUseTestAccount = () => {
+        setEmail("demo@sketchboard.com")
+        setPassword("demo1234")
+        toast({
+            variant: "info",
+            title: "Test Account Applied",
+            description: "Demo credentials have been filled automatically.",
+        })
+    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setIsLoading(true)
 
         // Simulate authentication delay
-        setTimeout(async() => {
+        setTimeout(async () => {
             setIsLoading(false)
-            // In a real app, you would handle authentication here
-            try{
-                await axios.post(`${process.env.NEXT_PUBLIC_HTTP_BACKEND}/signin`,{
-                    email :email,
+
+            // Show success toast
+            try {
+                const res = await axios.post(`${process.env.NEXT_PUBLIC_HTTP_BACKEND}/signin`, {
+                    email: email,
                     password: password
                 })
-            }catch{
-                console.log("failed to send data to backend")
+                console.log(res)
+                if (res.status === 200) {
+                    toast({
+                        variant: "success",
+                        title: res.data.message,
+                        description: "Welcome back to Sketch Board.",
+                    })
+
+            }} catch(error) {
+                if (axios.isAxiosError(error)) {
+                    // Get the error response data
+                    const errorMessage = error.response?.data?.message || "Failed to sign in";
+
+                    toast({
+                        variant: "error",
+                        title: "Authentication Failed",
+                        description: errorMessage,
+                    })
+
+                } else {
+                    // For non-axios errors
+                    toast({
+                        variant: "error",
+                        title: "Something went wrong",
+                        description: "Please try again later.",
+                    })
+
+                }
+            } finally {
+                setIsLoading(false)
             }
-            // window.location.href = "/dashboard"
-        }, 1500)
+        // window.location.href = "/dashboard"
+            },1500)
     }
 
     const fadeUpVariants = {
@@ -91,6 +163,9 @@ export default function SignIn() {
                 </motion.div>
 
                 <motion.div custom={2} variants={fadeUpVariants} initial="hidden" animate="visible">
+                    {/* Add the TestCredentials component here */}
+                    <TestCredentials onUseTestAccount={handleUseTestAccount} />
+
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="space-y-2">
                             <Label htmlFor="email">Email</Label>
