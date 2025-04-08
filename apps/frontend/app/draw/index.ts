@@ -1,4 +1,6 @@
+import { chats } from "@repo/db/schema";
 import axios from "axios"
+import { db } from "@repo/db";
 import { types } from "util";
 // import { WebSocket } from "ws";
 
@@ -205,4 +207,6 @@ export async function initDraw(canvas: HTMLCanvasElement, roomId: string, socket
 
         return shapes
     }
+
 }
+

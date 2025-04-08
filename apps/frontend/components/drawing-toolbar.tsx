@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Slider } from "@/components/ui/slider"
+import { clearAll } from "@/components/ui/clearAll"
+import { toast } from "./ui/use-toast"
 
 type Tool = "pen" | "line" | "circle" | "rectangle" | "eraser" | "text" | null
 
@@ -26,11 +28,14 @@ const predefinedColors = [
 interface DrawingToolbarProps {
     selectedTool: Tool;
     setSelectedTool: (tool: Tool) => void;
-    selectedColor : string,
-    setSelectedColor : (color : string) => void
+    selectedColor: string,
+    setSelectedColor: (color: string) => void,
+    clear: boolean,
+    setclear: (clear: boolean) => void,
+    roomId: string
 }
 
-export default function DrawingToolbar({ selectedTool, setSelectedTool, selectedColor, setSelectedColor }: DrawingToolbarProps) {
+export default function DrawingToolbar({ selectedTool, setSelectedTool, selectedColor, setSelectedColor, clear, setclear, roomId }: DrawingToolbarProps) {
     // const [selectedColor, setSelectedColor] = useState("#000000")
     // const [customColor, setCustomColor] = useState("#000000")
     const [strokeWidth, setStrokeWidth] = useState(3)
@@ -45,10 +50,23 @@ export default function DrawingToolbar({ selectedTool, setSelectedTool, selected
         // setCustomColor(color)
     }
 
-    const handleClearAll = () => {
+    const handleClearAll = async () => {
         // Implement clear all functionality
-        console.log("Clear all")
-        setSelectedTool(null)
+        try {
+            setclear(true);
+            await clearAll(roomId);
+            setSelectedTool(null);
+            console.log("Clear all successful");
+        } catch (error) {
+            console.error("Failed to clear canvas:", error);
+            toast({
+                variant : "error",
+                title :"Failed to clear canvas",
+                description :"Please try again"
+            })
+        } finally {
+            setclear(false);
+        }
     }
 
     return (

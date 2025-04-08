@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 import { db } from "@repo/db";
 import { User, Room ,chats} from "@repo/db/schema";
 import middleware from "./middleware";
-import { eq,desc} from "drizzle-orm";
+import { eq,desc } from "drizzle-orm";
 const app = express();
 import cors from "cors"
 
@@ -128,6 +128,30 @@ app.get("/room/:slug",async(req:Request,res:Response)=>{
   res.json({
     roomId
   })
+})
+
+app.delete("/chats/:roomId" ,async(req:Request,res:Response)=>{
+  try{
+
+    const roomId = req.params.roomId
+
+    if (isNaN(Number(roomId))) {
+      res.status(400).json({ 
+        message: 'Invalid room ID format' ,
+        roomId
+      });
+    }else{
+
+    await db.delete(chats).where(eq(chats.roomId,Number(roomId)))
+    res.status(200).json({
+      message:"Canvas cleared"
+    })
+  }
+}catch(error){
+    res.status(500).json({
+      message : "failed to clear canvas"
+    })
+  }
 })
 
 app.listen(3002, () => {

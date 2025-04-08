@@ -1,6 +1,5 @@
 "use client"
 import { useEffect, useRef, useState } from "react";
-import { initDraw } from "@/app/draw";
 import {Canvas} from "./canvas"
 // import { WebSocket } from "ws";
 // import dotenv from "dotenv"
