@@ -4,7 +4,7 @@ import { db } from "@repo/db";
 import { types } from "util";
 // import { WebSocket } from "ws";
 
-export async function initDraw(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket, tool: string | null, color: string) {
+export async function initDraw(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket, tool: string | null, color: string ,selectedbgColor :string) {
 
     const context = canvas.getContext("2d");
 
@@ -167,7 +167,7 @@ export async function initDraw(canvas: HTMLCanvasElement, roomId: string, socket
 
     function clearCanvas(ExistingShapes: shapes[], ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = "rgba(255,255,255)"
+        ctx.fillStyle = selectedbgColor
         ctx.fillRect(0, 0, canvas.width, canvas.height)
 
         ExistingShapes.map((shape) => {

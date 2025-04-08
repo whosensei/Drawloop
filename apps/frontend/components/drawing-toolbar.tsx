@@ -32,10 +32,12 @@ interface DrawingToolbarProps {
     setSelectedColor: (color: string) => void,
     clear: boolean,
     setclear: (clear: boolean) => void,
-    roomId: string
+    roomId: string,
+    selectedbgColor :string,
+    setSelectedbgColor : (color:string)=>void
 }
 
-export default function DrawingToolbar({ selectedTool, setSelectedTool, selectedColor, setSelectedColor, clear, setclear, roomId }: DrawingToolbarProps) {
+export default function DrawingToolbar({ selectedTool, setSelectedTool, selectedColor, setSelectedColor, clear, setclear, roomId ,selectedbgColor,setSelectedbgColor}: DrawingToolbarProps) {
     // const [selectedColor, setSelectedColor] = useState("#000000")
     // const [customColor, setCustomColor] = useState("#000000")
     const [strokeWidth, setStrokeWidth] = useState(3)
@@ -47,6 +49,11 @@ export default function DrawingToolbar({ selectedTool, setSelectedTool, selected
 
     const handleColorChange = (color: string) => {
         setSelectedColor(color)
+        // setCustomColor(color)
+    }
+
+    const handlebgColorChange = (color: string) => {
+        setSelectedbgColor(color)
         // setCustomColor(color)
     }
 
