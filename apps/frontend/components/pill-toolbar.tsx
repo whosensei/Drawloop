@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Circle, Square, Type, Minus, Eraser, Trash2, Check, Pencil, Save, Undo, Redo, Palette } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -8,6 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { clearAll } from "@/components/ui/clearAll"
 import { toast } from "./ui/use-toast"
+// import { HandleClearAll } from "./handleClearAll"
 
 type Tool = "pen" | "line" | "circle" | "rectangle" | "eraser" | "text" | null
 type StrokeThickness = "thin" | "medium" | "thick"
@@ -54,6 +55,13 @@ export default function PillToolbar({ selectedTool, setSelectedTool, selectedCol
   const [canUndo, setCanUndo] = useState(false)
   const [canRedo, setCanRedo] = useState(false)
 
+  // Initialize canUndo and canRedo state client-side only
+  useEffect(() => {
+    // Set initial state once client-side
+    setCanUndo(false);
+    setCanRedo(false);
+  }, []);
+
   const handleToolClick = (tool: Tool) => {
     setSelectedTool(tool)
   }
@@ -92,12 +100,14 @@ export default function PillToolbar({ selectedTool, setSelectedTool, selectedCol
   const handleUndo = () => {
     console.log("Undo action")
     setCanRedo(true)
-    setCanUndo(Math.random() > 0.3)
+    // Don't use Math.random() as it causes hydration errors
+    setCanUndo(false) // Set to a deterministic value instead
   }
 
   const handleRedo = () => {
     console.log("Redo action")
-    setCanRedo(Math.random() > 0.7)
+    // Don't use Math.random() as it causes hydration errors
+    setCanRedo(false) // Set to a deterministic value instead
   }
 
   const handleSave = () => {
@@ -443,7 +453,7 @@ export default function PillToolbar({ selectedTool, setSelectedTool, selectedCol
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="sm" onClick={handleClearAll} className="h-8 w-8 p-0 rounded-full">
+              <Button variant="ghost" size="sm" onClick={handleClearAll/*()=>HandleClearAll(setclear,setSelectedTool,setCanUndo,setCanRedo,roomId)*/} className="h-8 w-8 p-0 rounded-full">
                 <Trash2 className="w-4 h-4" />
                 <span className="sr-only">Clear All</span>
               </Button>

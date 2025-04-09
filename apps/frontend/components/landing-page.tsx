@@ -13,6 +13,8 @@ const pacifico = Pacifico({
   subsets: ["latin"],
   weight: ["400"],
   variable: "--font-pacifico",
+  display: "swap",
+  preload: true,
 })
 
 export default function LandingPage() {
@@ -106,8 +108,9 @@ export default function LandingPage() {
               <span
                 className={cn(
                   "bg-clip-text text-transparent bg-gradient-to-r from-indigo-300 via-white/90 to-rose-300",
-                  pacifico.className,
+                  pacifico.variable
                 )}
+                style={{ fontFamily: 'var(--font-pacifico)' }}
               >
                 Shape it.
               </span>
