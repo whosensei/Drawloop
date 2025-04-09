@@ -4,7 +4,7 @@ import { initDraw } from "@/app/draw";
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import DrawingToolbar from "@/components/drawing-toolbar"
-import PillToolbar from "./pill-toolbar";
+import PillToolbar from "./toolbar";
 
 // import { WebSocket } from "ws";
 
