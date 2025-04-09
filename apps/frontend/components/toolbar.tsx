@@ -10,7 +10,6 @@ import { clearAll } from "@/components/ui/clearAll"
 import { toast } from "./ui/use-toast"
 
 type Tool = "pen" | "line" | "circle" | "rectangle" | "eraser" | "text" | null
-type StrokeThickness = "thin" | "medium" | "thick"
 
 interface ColorOption {
   name: string
@@ -27,8 +26,10 @@ interface DrawingToolbarProps {
     setclear: (clear: boolean) => void,
     roomId: string,
     selectedbgColor :string,
-    setSelectedbgColor : (color:string)=>void
-}
+    setSelectedbgColor : (color:string)=>void,
+    thickness : string,
+    setThickness : (thickness : string)=>void
+  }
 
 
 const colorOptions: ColorOption[] = [
@@ -52,18 +53,18 @@ const colorOptions: ColorOption[] = [
 
 // Map thickness names to actual pixel values
 const thicknessValues = {
-  thin: 2,
-  medium: 5,
-  thick: 10,
+  thin: 1,
+  medium: 3,
+  thick: 6,
 }
 
-export default function PillToolbar({ selectedTool, setSelectedTool, selectedColor, setSelectedColor, clear, setclear, roomId ,selectedbgColor,setSelectedbgColor}: DrawingToolbarProps) {
+export default function PillToolbar({ selectedTool, setSelectedTool, selectedColor, setSelectedColor, clear, setclear, roomId ,selectedbgColor,setSelectedbgColor ,thickness,setThickness}: DrawingToolbarProps) {
 //   const [selectedTool, setSelectedTool] = useState<Tool>("pen")
 //   const [selectedColor, setSelectedColor] = useState("#000000")
   const [customStrokeColor, setCustomStrokeColor] = useState("#000000")
 //   const [selectedbgColor, setSelectedbgColor] = useState("#FFFFFF")
   const [customBgColor, setCustomBgColor] = useState("#FFFFFF")
-  const [thickness, setThickness] = useState<StrokeThickness>("medium")
+  // const [thickness, setThickness] = useState<StrokeThickness>("medium")
   const [canUndo, setCanUndo] = useState(false)
   const [canRedo, setCanRedo] = useState(false)
   const [recentColors, setRecentColors] = useState<string[]>([])
@@ -280,12 +281,12 @@ export default function PillToolbar({ selectedTool, setSelectedTool, selectedCol
                 className={cn(
                   "h-9 w-9 p-0 rounded-full flex items-center justify-center transition-all duration-200",
                   clayButton,
-                  thickness === "thin" && clayButtonActive,
-                  thickness === "thin" && "text-[#5c5c5c] font-bold",
+                  thickness === "1" && clayButtonActive,
+                  thickness === "1" && "text-[#5c5c5c] font-bold",
                 )}
-                onClick={() => setThickness("thin")}
+                onClick={() => setThickness("1")}
               >
-                <div className={cn("w-4 h-0.5 bg-current rounded-full", thickness === "thin" && "bg-[#5c5c5c]")} />
+                <div className={cn("w-4 h-0.5 bg-current rounded-full", thickness === "1" && "bg-[#5c5c5c]")} />
                 <span className="sr-only">Thin</span>
               </Button>
             </TooltipTrigger>
@@ -300,12 +301,12 @@ export default function PillToolbar({ selectedTool, setSelectedTool, selectedCol
                 className={cn(
                   "h-9 w-9 p-0 rounded-full flex items-center justify-center transition-all duration-200",
                   clayButton,
-                  thickness === "medium" && clayButtonActive,
-                  thickness === "medium" && "text-[#5c5c5c] font-bold",
+                  thickness === "3" && clayButtonActive,
+                  thickness === "3" && "text-[#5c5c5c] font-bold",
                 )}
-                onClick={() => setThickness("medium")}
+                onClick={() => setThickness("3")}
               >
-                <div className={cn("w-4 h-1 bg-current rounded-full", thickness === "medium" && "bg-[#5c5c5c]")} />
+                <div className={cn("w-4 h-1 bg-current rounded-full", thickness === "3" && "bg-[#5c5c5c]")} />
                 <span className="sr-only">Medium</span>
               </Button>
             </TooltipTrigger>
@@ -320,12 +321,12 @@ export default function PillToolbar({ selectedTool, setSelectedTool, selectedCol
                 className={cn(
                   "h-9 w-9 p-0 rounded-full flex items-center justify-center transition-all duration-200",
                   clayButton,
-                  thickness === "thick" && clayButtonActive,
-                  thickness === "thick" && "text-[#5c5c5c] font-bold",
+                  thickness === "6" && clayButtonActive,
+                  thickness === "6" && "text-[#5c5c5c] font-bold",
                 )}
-                onClick={() => setThickness("thick")}
+                onClick={() => setThickness("6")}
               >
-                <div className={cn("w-4 h-2 bg-current rounded-full", thickness === "thick" && "bg-[#5c5c5c]")} />
+                <div className={cn("w-4 h-2 bg-current rounded-full", thickness === "5" && "bg-[#5c5c5c]")} />
                 <span className="sr-only">Thick</span>
               </Button>
             </TooltipTrigger>

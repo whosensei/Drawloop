@@ -1,7 +1,8 @@
 import {getExistingShapes} from "./http"
 // import { WebSocket } from "ws";
 
-export async function initDraw(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket, tool: string | null, color: string ,selectedbgColor :string) {
+export async function initDraw(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket, tool: string | null, color: string ,selectedbgColor :string,thickness :string
+) {
 
     const context = canvas.getContext("2d");
 
@@ -19,13 +20,16 @@ export async function initDraw(canvas: HTMLCanvasElement, roomId: string, socket
         width: number,
         height: number,
         color: string
+        thickness :number
     } |
     {
         type: "circle",
         StartX: number,
         StartY: number,
         radius: number,
-        color: string
+        color: string,
+        thickness :number
+
     } |
     {
         type: "line",
@@ -33,13 +37,17 @@ export async function initDraw(canvas: HTMLCanvasElement, roomId: string, socket
         StartY: number,
         width: number,
         height: number
-        color: string
+        color: string,
+        thickness :number
+
     } |
     {
 
         type: "pen",
         points: { x: number, y: number }[],
-        color: string
+        color: string,
+        thickness :number
+
 
     }
 
@@ -75,8 +83,6 @@ export async function initDraw(canvas: HTMLCanvasElement, roomId: string, socket
 
     function handleMouseUp(e: MouseEvent) {
         clicked = false
-        const EndX = e.clientX
-        const EndY = e.clientY
         drawing = false
 
         let shape: shapes | null = null
@@ -88,7 +94,8 @@ export async function initDraw(canvas: HTMLCanvasElement, roomId: string, socket
                 StartY,
                 width: e.clientX - StartX,
                 height: e.clientY - StartY,
-                color: color
+                color: color,
+                thickness:Number(thickness)
             }
         } else if (tool === "circle") {
             shape = {
@@ -96,7 +103,9 @@ export async function initDraw(canvas: HTMLCanvasElement, roomId: string, socket
                 StartX,
                 StartY,
                 radius: Math.sqrt((e.clientX - StartX) ** 2 + (e.clientY - StartY) ** 2),
-                color: color
+                color: color,
+                thickness:Number(thickness)
+
             }
         } else if (tool === "line") {
             shape = {
@@ -105,13 +114,17 @@ export async function initDraw(canvas: HTMLCanvasElement, roomId: string, socket
                 StartY,
                 width: e.clientX - StartX,
                 height: e.clientY - StartY,
-                color: color
+                color: color,
+                thickness:Number(thickness)
+
             }
         } else if (tool === "pen") {
             shape = {
                 type: "pen",
                 points: [...currentPenPoints],
-                color: color
+                color: color,
+                thickness:Number(thickness)
+
             };
         }
 
@@ -138,15 +151,20 @@ export async function initDraw(canvas: HTMLCanvasElement, roomId: string, socket
             console.log(tool)
             switch (tool) {
                 case "rectangle":
+                    ctx.lineWidth = Number(thickness)
                     ctx.strokeRect(StartX, StartY, width, height)
                     break;
                 case "circle":
                     ctx.beginPath();
+                    ctx.lineWidth = Number(thickness)
+
                     ctx.arc(StartX, StartY, radius, 0, 2 * Math.PI);
                     ctx.stroke();
                     break;
                 case "line":
                     ctx.beginPath();
+                    ctx.lineWidth = Number(thickness)
+
                     ctx.moveTo(StartX, StartY)
                     ctx.lineTo(e.clientX, e.clientY)
                     ctx.stroke()
@@ -155,6 +173,8 @@ export async function initDraw(canvas: HTMLCanvasElement, roomId: string, socket
                     if (!drawing) return;
                     // Draw the current pen stroke
                     ctx.beginPath();
+                    ctx.lineWidth = Number(thickness)
+
                     ctx.moveTo(currentPenPoints[0].x, currentPenPoints[0].y);
                     currentPenPoints.forEach(point => {
                         ctx.lineTo(point.x, point.y);
@@ -179,21 +199,25 @@ export async function initDraw(canvas: HTMLCanvasElement, roomId: string, socket
         ExistingShapes.map((shape) => {
             if (shape.type === "rect") {
                 ctx.strokeStyle = shape.color
+                ctx.lineWidth = Number(shape.thickness)
                 ctx.strokeRect(shape.StartX, shape.StartY, shape.width, shape.height)
             } else if (shape.type === "circle") {
                 ctx.beginPath();
                 ctx.strokeStyle = shape.color
+                ctx.lineWidth = Number(shape.thickness)
                 ctx.arc(shape.StartX, shape.StartY, shape.radius, 0, 2 * Math.PI);
                 ctx.stroke()
             } else if (shape.type === "line") {
                 ctx.beginPath();
                 ctx.strokeStyle = shape.color
+                ctx.lineWidth = Number(shape.thickness)
                 ctx.moveTo(shape.StartX, shape.StartY)
                 ctx.lineTo(shape.StartX + shape.width, shape.StartY + shape.height)
                 ctx.stroke()
             } else if (shape.type === "pen") {
                 ctx.beginPath();
                 ctx.strokeStyle = shape.color;
+                ctx.lineWidth = Number(shape.thickness)
                 const [first, ...rest] = shape.points;
                 if (first) ctx.moveTo(first.x, first.y);
                 rest.forEach(pt => ctx.lineTo(pt.x, pt.y));

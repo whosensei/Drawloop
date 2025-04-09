@@ -16,11 +16,18 @@ export function Canvas({ roomId, socket }:
     }) {
 
     type Tool = "pen"|"line" | "circle" | "rectangle" | "eraser" | "text" | null;
+    type StrokeThickness = "1" | "3" | "6"
+
     const [selectedTool, setSelectedTool] = useState<Tool>(null)
     const [selectedColor, setSelectedColor] = useState("#000000")
-    const [selectedbgColor, setSelectedbgColor] = useState("#000000")
+    const [selectedbgColor, setSelectedbgColor] = useState("#FFFFFF")
     const [clear,setclear] = useState<true | false>(false)
+    const [thickness, setThickness] = useState<StrokeThickness>("1")
 
+    // Wrapper function to handle type conversion
+    const handleThicknessChange = (value: string) => {
+        setThickness(value as StrokeThickness);
+    }
 
     const Canvasref = useRef(null);
 
@@ -28,10 +35,10 @@ export function Canvas({ roomId, socket }:
         
         if (Canvasref.current) {
             const canvas = Canvasref.current
-            initDraw(canvas, roomId, socket, selectedTool,selectedColor,selectedbgColor)
+            initDraw(canvas, roomId, socket, selectedTool,selectedColor,selectedbgColor,thickness)
         }
 
-    }, [Canvasref, selectedTool,selectedColor,clear,selectedbgColor])
+    }, [Canvasref, selectedTool,selectedColor,clear,selectedbgColor,thickness])
 
     return (
         <div>
@@ -39,7 +46,7 @@ export function Canvas({ roomId, socket }:
             <div className="absolute top-1/64 left-1/2 -translate-x-1/2">
                 <div className="w-full max-w-3xl">
                     <PillToolbar selectedTool={selectedTool} setSelectedTool={setSelectedTool} selectedColor={selectedColor} setSelectedColor={setSelectedColor} clear={clear} setclear={setclear} roomId={roomId}
-                    selectedbgColor= {selectedbgColor} setSelectedbgColor={setSelectedbgColor} />
+                    selectedbgColor= {selectedbgColor} setSelectedbgColor={setSelectedbgColor} thickness={thickness} setThickness={handleThicknessChange} />
                 </div>
             </div>
         </div>
