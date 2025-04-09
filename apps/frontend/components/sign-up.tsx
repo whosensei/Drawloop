@@ -74,7 +74,7 @@ export default function SignUp() {
                 setIsLoading(false)
             }
             // window.location.href = "/dashboard"
-        }, 1500)
+        }, 1000)
     }
 
     const fadeUpVariants = {

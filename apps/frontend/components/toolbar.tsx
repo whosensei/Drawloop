@@ -9,7 +9,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { clearAll } from "@/components/ui/clearAll"
 import { toast } from "./ui/use-toast"
 
-type Tool = "pen" | "line" | "circle" | "rectangle" | "eraser" | "text" | null
+type Tool = "pen" | "line" | "circle" | "rectangle" | "eraser" | null
 
 interface ColorOption {
   name: string
@@ -230,26 +230,6 @@ export default function PillToolbar({ selectedTool, setSelectedTool, selectedCol
               </Button>
             </TooltipTrigger>
             <TooltipContent className={clayPopover}>Rectangle</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className={cn(
-                  "h-9 w-9 p-0 rounded-full transition-all duration-200",
-                  clayButton,
-                  selectedTool === "text" && clayButtonActive,
-                  selectedTool === "text" && "text-[#5c5c5c] font-bold",
-                )}
-                onClick={() => handleToolClick("text")}
-              >
-                <Type className={cn("w-4 h-4", selectedTool === "text" && "w-5 h-5")} />
-                <span className="sr-only">Text</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent className={clayPopover}>Text</TooltipContent>
           </Tooltip>
 
           <Tooltip>

@@ -80,8 +80,9 @@ export default function SignIn() {
                     email: email,
                     password: password
                 })
-                console.log(res)
                 if (res.status === 200) {
+                    const token = res.data.token
+                    localStorage.setItem("token",token)
                     toast({
                         variant: "success",
                         title: res.data.message,
@@ -111,8 +112,8 @@ export default function SignIn() {
             } finally {
                 setIsLoading(false)
             }
-        // window.location.href = "/dashboard"
-            },1500)
+        window.location.href = "/dashboard"
+            },1000)
     }
 
     const fadeUpVariants = {

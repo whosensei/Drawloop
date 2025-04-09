@@ -17,6 +17,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
+import axios from "axios"
 
 // Mock data for rooms
 const initialRooms = [
@@ -203,7 +204,19 @@ export default function Dashboard() {
     })
   }
 
-  const handleJoinRoom = (name: string) => {
+  const handleJoinRoom = async(name: string) => {
+    // const tok = localStorage.getItem("token")
+    // console.log(tok)
+    // if(tok){
+    //   const msg = await axios.post(`${process.env.NEXT_PUBLIC_HTTP_BACKEND}/create-room`,{
+    //     name:newRoomName
+    //   },{
+    //     headers:{
+    //       'authorization' : tok
+    //     }
+    //   })
+    //   console.log(msg)
+    // }
     toast({
       variant: "success",
       title: "Joining Room",
@@ -238,6 +251,7 @@ export default function Dashboard() {
                   description: "You have been logged out successfully.",
                 })
                 setTimeout(() => {
+                  localStorage.removeItem("token")
                   window.location.href = "/"
                 }, 1000)
               }}

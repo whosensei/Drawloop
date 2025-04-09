@@ -15,7 +15,7 @@ export function Canvas({ roomId, socket }:
         roomId: string
     }) {
 
-    type Tool = "pen"|"line" | "circle" | "rectangle" | "eraser" | "text" | null;
+    type Tool = "pen"|"line" | "circle" | "rectangle" | "eraser" | null;
     type StrokeThickness = "1" | "3" | "6"
 
     const [selectedTool, setSelectedTool] = useState<Tool>(null)

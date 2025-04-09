@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express";
-import { SigninSchema, SignupSchema } from "@repo/common/zod";
+import { CreateRoomSchema, SigninSchema, SignupSchema } from "@repo/common/zod";
 import { JWT_SECRET } from "@repo/backend-common/config";
 import jwt from "jsonwebtoken";
 import { db } from "@repo/db";
@@ -84,25 +84,38 @@ app.post("/signin", async (req: Request, res: Response) => {
 });
 
 app.post("/create-room",middleware,async(req : Request,res :Response)=>{
-  //@ts-ignore
+  try {
+    //@ts-ignore
+    console.log("authorised");
+    const parsedData = CreateRoomSchema.safeParse(req.body);
+    
+    if (!parsedData.success) {
+      res.status(400).json({
+        message: "Invalid room data"
+      });
+      return;
+    }
+    //@ts-ignore
+    const userId = req.userId;
+    const roomId = Math.floor(Math.random() * 1000) + 1
+    
+    const roomName = parsedData.data.name
 
-  console.log("authorised");
-  //@ts-ignore
-  const userId = req.userId;
-  const roomId = Math.floor(Math.random() * 1000) + 1
-  const roomName = `room${roomId}`
-
-  await db.insert(Room).values({
-    id :roomId,
-    name : roomName,
-    adminId : userId
-  })
-  res.status(200).json({
-    message:"Room created successfully",
-    roomId : roomId,
-    name : roomName
-  })
-  return;
+    await db.insert(Room).values({
+      id :roomId,
+      name : roomName,
+      adminId : userId
+    })
+    res.status(200).json({
+      message:"Room created successfully",
+      roomId : roomId,
+      name : roomName
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to create room"
+    });
+  }
 })
 
 app.get("/chats/:roomId", async(req:Request , res : Response)=>{
