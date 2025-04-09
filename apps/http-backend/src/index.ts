@@ -131,17 +131,6 @@ app.get("/chats/:roomId", async(req:Request , res : Response)=>{
   })
 })
 
-app.get("/room/:slug",async(req:Request,res:Response)=>{
-  const slug  = req.params.slug;
-
-  const roomId = await db.query.Room.findFirst({
-    where : eq(Room.slug,slug ?? "")
-  })
-
-  res.json({
-    roomId
-  })
-})
 
 app.delete("/chats/:roomId" ,async(req:Request,res:Response)=>{
   try{
