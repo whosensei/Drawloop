@@ -1,7 +1,4 @@
-import { chats } from "@repo/db/schema";
-import axios from "axios"
-import { db } from "@repo/db";
-import { types } from "util";
+import {getExistingShapes} from "./http"
 // import { WebSocket } from "ws";
 
 export async function initDraw(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket, tool: string | null, color: string ,selectedbgColor :string) {
@@ -66,8 +63,7 @@ export async function initDraw(canvas: HTMLCanvasElement, roomId: string, socket
     let currentPenPoints: { x: number, y: number }[] = [];
     let drawing: boolean = false
 
-    canvas.addEventListener("mousedown", (e) => {
-
+    function handleMouseDown(e: MouseEvent) {
         clicked = true
         drawing = true
         StartX = e.clientX;
@@ -75,9 +71,9 @@ export async function initDraw(canvas: HTMLCanvasElement, roomId: string, socket
         currentPenPoints = [{ x: StartX, y: StartY }];
         ctx.beginPath();
         ctx.moveTo(StartX, StartY);
-    })
+    }
 
-    canvas.addEventListener("mouseup", (e) => {
+    function handleMouseUp(e: MouseEvent) {
         clicked = false
         const EndX = e.clientX
         const EndY = e.clientY
@@ -130,9 +126,9 @@ export async function initDraw(canvas: HTMLCanvasElement, roomId: string, socket
         })
 
         socket.send(data)
-    })
+    }
 
-    canvas.addEventListener("mousemove", (e) => {
+    function handleMouseMove(e: MouseEvent) {
         if (clicked) {
             const width: number = e.clientX - StartX;
             const height: number = e.clientY - StartY;
@@ -157,13 +153,23 @@ export async function initDraw(canvas: HTMLCanvasElement, roomId: string, socket
                     break;
                 case "pen":
                     if (!drawing) return;
+                    // Draw the current pen stroke
+                    ctx.beginPath();
+                    ctx.moveTo(currentPenPoints[0].x, currentPenPoints[0].y);
+                    currentPenPoints.forEach(point => {
+                        ctx.lineTo(point.x, point.y);
+                    });
                     ctx.lineTo(e.clientX, e.clientY);
                     ctx.stroke();
                     currentPenPoints.push({ x: e.clientX, y: e.clientY });
                     break;
             }
         }
-    })
+    }
+
+    canvas.addEventListener("mousedown", handleMouseDown);
+    canvas.addEventListener("mouseup", handleMouseUp);
+    canvas.addEventListener("mousemove", handleMouseMove);
 
     function clearCanvas(ExistingShapes: shapes[], ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -194,18 +200,6 @@ export async function initDraw(canvas: HTMLCanvasElement, roomId: string, socket
                 ctx.stroke();
             }
         })
-    }
-
-    async function getExistingShapes(roomId: string) {
-        const res = await axios.get(`${process.env.NEXT_PUBLIC_HTTP_BACKEND!}/chats/${roomId}`);
-        const messages = res.data.messages;
-
-        const shapes = messages.map((x: { message: string }) => {
-            const parsedData = JSON.parse(x.message)
-            return parsedData.shape
-        })
-
-        return shapes
     }
 
 }
