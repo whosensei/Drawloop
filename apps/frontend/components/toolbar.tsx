@@ -28,7 +28,8 @@ interface DrawingToolbarProps {
     selectedbgColor :string,
     setSelectedbgColor : (color:string)=>void,
     thickness : string,
-    setThickness : (thickness : string)=>void
+    setThickness : (thickness : string)=>void,
+    saveAsImage?: () => void
   }
 
 
@@ -58,7 +59,7 @@ const thicknessValues = {
   thick: 6,
 }
 
-export default function PillToolbar({ selectedTool, setSelectedTool, selectedColor, setSelectedColor, clear, setclear, roomId ,selectedbgColor,setSelectedbgColor ,thickness,setThickness}: DrawingToolbarProps) {
+export default function PillToolbar({ selectedTool, setSelectedTool, selectedColor, setSelectedColor, clear, setclear, roomId ,selectedbgColor,setSelectedbgColor ,thickness,setThickness, saveAsImage}: DrawingToolbarProps) {
 //   const [selectedTool, setSelectedTool] = useState<Tool>("pen")
 //   const [selectedColor, setSelectedColor] = useState("#000000")
   const [customStrokeColor, setCustomStrokeColor] = useState("#000000")
@@ -87,9 +88,7 @@ export default function PillToolbar({ selectedTool, setSelectedTool, selectedCol
 
   const addToRecentColors = (color: string) => {
     setRecentColors((prev) => {
-      // Remove if already exists
       const filtered = prev.filter((c) => c !== color)
-      // Add to beginning and limit to 5 colors
       return [color, ...filtered].slice(0, 5)
     })
   }
@@ -129,7 +128,10 @@ export default function PillToolbar({ selectedTool, setSelectedTool, selectedCol
   }
 
   const handleSave = () => {
-    console.log("Save drawing")
+    if (saveAsImage) {
+      saveAsImage();
+    }
+    console.log("Save drawing");
   }
 
   // Claymorphism styles

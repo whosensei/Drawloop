@@ -31,6 +31,18 @@ export function Canvas({ roomId, socket }:
 
     const Canvasref = useRef(null);
 
+    const saveAsImage = () => {
+        if (Canvasref.current) {
+            const canvas = Canvasref.current as HTMLCanvasElement;
+            const link = document.createElement('a');
+            link.download = `drawing-${roomId}-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.png`;
+            link.href = canvas.toDataURL('image/png');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    };
+
     useEffect(() => {
         
         if (Canvasref.current) {
@@ -46,7 +58,7 @@ export function Canvas({ roomId, socket }:
             <div className="absolute top-1/64 left-1/2 -translate-x-1/2">
                 <div className="w-full max-w-3xl">
                     <PillToolbar selectedTool={selectedTool} setSelectedTool={setSelectedTool} selectedColor={selectedColor} setSelectedColor={setSelectedColor} clear={clear} setclear={setclear} roomId={roomId}
-                    selectedbgColor= {selectedbgColor} setSelectedbgColor={setSelectedbgColor} thickness={thickness} setThickness={handleThicknessChange} />
+                    selectedbgColor= {selectedbgColor} setSelectedbgColor={setSelectedbgColor} thickness={thickness} setThickness={handleThicknessChange} saveAsImage={saveAsImage} />
                 </div>
             </div>
         </div>
