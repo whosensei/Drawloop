@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Circle, Square, Type, Minus, Eraser, Trash2, ChevronDown, Check, Pencil } from "lucide-react"
+import { Circle, Square, Type, Minus, Eraser, Trash2, ChevronDown, Check, Pencil, Save } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -34,12 +34,15 @@ interface DrawingToolbarProps {
     setclear: (clear: boolean) => void,
     roomId: string,
     selectedbgColor :string,
-    setSelectedbgColor : (color:string)=>void
-}
+    setSelectedbgColor : (color:string)=>void,
+    thickness : string,
+    setThickness : (thickness : string)=>void,
+    saveAsImage?: () => void
+  }
 
-export default function DrawingToolbar({ selectedTool, setSelectedTool, selectedColor, setSelectedColor, clear, setclear, roomId ,selectedbgColor,setSelectedbgColor}: DrawingToolbarProps) {
-    // const [selectedColor, setSelectedColor] = useState("#000000")
-    // const [customColor, setCustomColor] = useState("#000000")
+
+export default function DrawingToolbar({ selectedTool, setSelectedTool, selectedColor, setSelectedColor, clear, setclear, roomId ,selectedbgColor,setSelectedbgColor ,thickness,setThickness, saveAsImage}: DrawingToolbarProps) {
+
     const [strokeWidth, setStrokeWidth] = useState(3)
 
 
@@ -76,6 +79,13 @@ export default function DrawingToolbar({ selectedTool, setSelectedTool, selected
         }
     }
 
+    const handleSave = () => {
+        if (saveAsImage) {
+          saveAsImage();
+        }
+        console.log("Save drawing");
+      }
+    
     return (
         <div className="flex flex-wrap items-center gap-2 p-2 bg-white border rounded-lg shadow-sm">
             <Button
@@ -218,6 +228,15 @@ export default function DrawingToolbar({ selectedTool, setSelectedTool, selected
                     </div> */}
                 </DropdownMenuContent>
             </DropdownMenu>
+
+            <Button
+                variant={selectedTool === "line" ? "default" : "outline"}
+                size="icon"
+                onClick={handleSave}
+                title="save"
+            >
+                <Minus className="w-4 h-4" />
+            </Button>
         </div>
     )
 }

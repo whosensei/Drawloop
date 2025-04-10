@@ -8,6 +8,7 @@ import middleware from "./middleware";
 import { eq,desc } from "drizzle-orm";
 const app = express();
 import cors from "cors"
+import { log } from "console";
 
 app.use(express.json());
 app.use(cors({
@@ -104,17 +105,37 @@ app.post("/create-room",middleware,async(req : Request,res :Response)=>{
     await db.insert(Room).values({
       id :roomId,
       name : roomName,
-      adminId : userId
+      adminId : userId,
     })
     res.status(200).json({
       message:"Room created successfully",
-      roomId : roomId,
-      name : roomName
+      id : roomId,
+      name : roomName,
+      adminId : userId,
     });
+
   } catch (error) {
     res.status(500).json({
       message: "Failed to create room"
     });
+  }
+})
+
+app.get("/rooms",middleware, async(req:Request , res : Response)=>{
+  try {
+    //@ts-ignore
+    const rooms = await db.select().from(Room)
+    // Optional: Filter rooms where user is admin or member
+    // const rooms = await db.select().from(Room).where(eq(Room.adminId, userId))
+    
+    res.status(200).json({
+      rooms
+    })
+  } catch(error) {
+    console.error("Error fetching rooms:", error);
+    res.status(500).json({
+      message: "Failed to fetch rooms"
+    })
   }
 })
 

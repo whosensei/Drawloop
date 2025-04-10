@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { LogOut, Plus, Trash2, ExternalLink, Info, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -18,36 +18,33 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
 import axios from "axios"
+import { Room } from "@repo/db/schema"
+import { GetexistingRooms, Createroom } from "./getExistingRooms"
 
-// Mock data for rooms
-const initialRooms = [
-  { id: "1", name: "Brainstorming Session", createdAt: "2023-10-15", members: 4, color: "indigo" },
-  { id: "2", name: "Project Planning", createdAt: "2023-10-16", members: 6, color: "violet" },
-  { id: "3", name: "UI Design Review", createdAt: "2023-10-17", members: 3, color: "rose" },
-  { id: "4", name: "Weekly Team Sync", createdAt: "2023-10-18", members: 8, color: "amber" },
-  { id: "5", name: "Product Roadmap", createdAt: "2023-10-19", members: 5, color: "cyan" },
-]
 
-// Demo credentials component
-// function TestCredentials() {
-//   return (
-//     <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm p-4 mb-8">
-//       <div className="flex items-center gap-2 mb-3">
-//         <Info className="h-4 w-4 text-indigo-400" />
-//         <h3 className="text-sm font-medium text-white">Demo Information</h3>
-//       </div>
+// Define function to get rooms from backend
 
-//       <p className="text-sm text-white/60 mb-2">
-//         This is a demo dashboard showing your sketch rooms. You can create new rooms, join existing ones, or delete
-//         rooms you no longer need.
-//       </p>
 
-//       <div className="text-[11px] text-white/40 mt-3">
-//         Try creating a new room or joining an existing one to see the interactions.
-//       </div>
-//     </div>
-//   )
-// }
+// Room type from backend
+type Room = {
+  id: number,
+  name: string,
+  createdAt: string | null,
+  adminId: number,
+  members: number | null,
+}
+
+// Room type for UI with additional properties
+type UIRoom = {
+  id: number,
+  name: string,
+  createdAt: string,
+  members: number,
+  color: string
+}
+
+// Initialize with empty array, will be populated in useEffect
+const initialRooms: Room[] = []
 
 // Claymorphic room card component
 function ClayRoomCard({
@@ -55,7 +52,7 @@ function ClayRoomCard({
   onJoin,
   onDelete,
 }: {
-  room: { id: string; name: string; createdAt: string; members: number; color: string }
+  room: UIRoom
   onJoin: () => void
   onDelete: () => void
 }) {
@@ -143,38 +140,80 @@ function ClayRoomCard({
 }
 
 export default function Dashboard() {
-  const [rooms, setRooms] = useState(initialRooms)
+  const [rooms, setRooms] = useState<UIRoom[]>([])
   const [newRoomName, setNewRoomName] = useState("")
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const { toast } = useToast()
 
-  const handleCreateRoom = () => {
-    if (newRoomName.trim()) {
-      // Generate a random color from the available options
-      const colors = ["indigo", "violet", "rose", "amber", "cyan"]
-      const randomColor = colors[Math.floor(Math.random() * colors.length)]
-
-      const newRoom = {
-        id: Date.now().toString(),
-        name: newRoomName,
-        createdAt: new Date().toISOString().split("T")[0],
-        members: 1,
-        color: randomColor,
+  useEffect(() => {
+    async function loadRooms() {
+      try {
+        const initialRooms: Room[] = await GetexistingRooms();
+        const colors = ["indigo", "violet", "rose", "amber", "cyan"]
+        const uiroom = initialRooms.map((room: Room,index:number) => ({
+          id: room.id,
+          name: room.name,
+          createdAt: room.createdAt || Date.now().toString(),
+          members: room.members || 0,
+          color: colors[index % colors.length]
+        }));
+        setRooms(uiroom);
       }
-      setRooms([...rooms, newRoom])
-      setNewRoomName("")
-      setIsCreateDialogOpen(false)
+      catch (e) {
+        console.error("failed to fetch rooms", e)
+      }
+    }
+    loadRooms()
+  }, [])
 
+  const handleCreateRoom = async () => {
+    try {
+      if (!newRoomName.trim()) {
+        toast({
+          variant: "error",
+          title: "Room name required",
+          description: "Please enter a name for your room."
+        });
+        return;
+      }
+        // Generate a random color from the available options
+        const colors = ["indigo", "violet", "rose", "amber", "cyan"]
+        const colorIndex = rooms.length % colors.length;
+        const roomColor = colors[colorIndex];
+        const roomdata = await Createroom(newRoomName)
+
+        if (!roomdata || !roomdata.id) {
+        throw new Error("Invalid response from server");
+        }
+
+        const newRoom: UIRoom = {
+
+          id: roomdata.id,
+          name: roomdata.name,
+          createdAt: roomdata.createdAt || new Date().toISOString(),
+          members: 0,
+          color: roomColor
+        }
+        setRooms([...rooms, newRoom])
+        setNewRoomName("")
+        setIsCreateDialogOpen(false)
+        toast({
+          variant: "success",
+          title: "Room Created",
+          description: `"${roomdata.name}" has been created successfully.`,
+        })
+    } catch (e) {
+      console.error(e)
       toast({
-        variant: "success",
-        title: "Room Created",
-        description: `"${newRoomName}" has been created successfully.`,
+        variant: "error", 
+        title: "Failed to create room",
+        description: "Please try again later."
       })
     }
   }
 
-  const handleDeleteRoom = (id: string, name: string) => {
+  const handleDeleteRoom = (id: number, name: string) => {
     const roomToDelete = rooms.find((room) => room.id === id)
     setRooms(rooms.filter((room) => room.id !== id))
 
@@ -204,7 +243,7 @@ export default function Dashboard() {
     })
   }
 
-  const handleJoinRoom = async(name: string) => {
+  const handleJoinRoom = async (name: string) => {
     // const tok = localStorage.getItem("token")
     // console.log(tok)
     // if(tok){
