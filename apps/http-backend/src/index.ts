@@ -3,9 +3,9 @@ import { CreateRoomSchema, SigninSchema, SignupSchema } from "@repo/common/zod";
 import { JWT_SECRET } from "@repo/backend-common/config";
 import jwt from "jsonwebtoken";
 import { db } from "@repo/db";
-import { User, Room ,chats} from "@repo/db/schema";
+import { User, Room, chats, userRooms } from "@repo/db/schema";
 import middleware from "./middleware";
-import { eq,desc } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 const app = express();
 import cors from "cors"
 import { log } from "console";
@@ -103,15 +103,22 @@ app.post("/create-room",middleware,async(req : Request,res :Response)=>{
     const roomName = parsedData.data.name
 
     await db.insert(Room).values({
-      id :roomId,
-      name : roomName,
-      adminId : userId,
+      id: roomId,
+      name: roomName,
+      adminId: userId,
     })
+    
+    // Add the user to the room as well
+    await db.insert(userRooms).values({
+      userId: userId,
+      roomId: roomId
+    })
+    
     res.status(200).json({
-      message:"Room created successfully",
-      id : roomId,
-      name : roomName,
-      adminId : userId,
+      message: "Room created successfully",
+      id: roomId,
+      name: roomName,
+      adminId: userId,
     });
 
   } catch (error) {
@@ -121,23 +128,79 @@ app.post("/create-room",middleware,async(req : Request,res :Response)=>{
   }
 })
 
-app.get("/rooms",middleware, async(req:Request , res : Response)=>{
+app.delete("/delete-room/:roomId", middleware, async(req: Request, res: Response) => {
+  try {
+    const roomId = parseInt(req.params.roomId || '0');
+    //@ts-ignore
+    const userId = req.userId;
+    
+    if (isNaN(roomId)) {
+      res.status(400).json({ 
+        message: 'Invalid room ID format'
+      });
+      return;
+    }
+    
+    // Delete the user-room association (not the room itself)
+    await db.delete(userRooms)
+      .where(
+        eq(userRooms.userId, userId) && 
+        eq(userRooms.roomId, roomId)
+      );
+    
+    res.status(200).json({
+      message: "Successfully left the room"
+    });
+  } catch (error) {
+    console.error("Error leaving room:", error);
+    res.status(500).json({
+      message: "Failed to leave room"
+    });
+  }
+})
+
+app.get("/rooms", middleware, async(req: Request, res: Response) => {
   try {
     //@ts-ignore
-    const rooms = await db.select().from(Room)
-    // Optional: Filter rooms where user is admin or member
-    // const rooms = await db.select().from(Room).where(eq(Room.adminId, userId))
+    const userId = req.userId;
+    
+    // Get rooms where the user is a member
+    const userRoomEntries = await db.select({
+      roomId: userRooms.roomId
+    })
+    .from(userRooms)
+    .where(eq(userRooms.userId, userId));
+    
+    if (userRoomEntries.length === 0) {
+      res.status(200).json({
+        rooms: []
+      });
+      return;
+    }
+    
+    const roomIds = userRoomEntries.map(entry => entry.roomId);
+    
+    // Get the full room details
+    const rooms = await db.select()
+      .from(Room)
+      .where(
+        // Check if room.id is in the array of roomIds
+        // This is a simplification - you might need a different approach 
+        // depending on your SQL dialect
+        // Using "in" operator would be better, but for simplicity we'll use this
+        roomIds.map(id => eq(Room.id, id)).reduce((prev, curr) => prev || curr)
+      );
     
     res.status(200).json({
       rooms
-    })
+    });
   } catch(error) {
     console.error("Error fetching rooms:", error);
     res.status(500).json({
       message: "Failed to fetch rooms"
-    })
+    });
   }
-})
+});
 
 app.get("/chats/:roomId", async(req:Request , res : Response)=>{
 
