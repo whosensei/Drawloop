@@ -240,6 +240,81 @@ app.delete("/chats/:roomId" ,async(req:Request,res:Response)=>{
   }
 })
 
+// New endpoint to add a user to a room
+app.post("/add-user-to-room", middleware, async(req: Request, res: Response): Promise<void> => {
+  try {
+    //@ts-ignore
+    const userId = req.userId;
+    const roomId = parseInt(req.body.roomId);
+    
+    if (isNaN(roomId)) {
+        res.status(400).json({
+        message: "Invalid room ID format"
+      });
+      return;
+    }
+    
+    // Check if the room exists
+    const roomExists = await db.query.Room.findFirst({
+      where: eq(Room.id, roomId)
+    });
+    
+    if (!roomExists) {
+        res.status(404).json({
+        message: "Room not found"
+      });
+      return;
+    }
+    
+    // Check if the user is already in the room
+    const userInRoom = await db.select()
+      .from(userRooms)
+      .where(
+        eq(userRooms.userId, userId) && 
+        eq(userRooms.roomId, roomId)
+      );
+    
+    if (userInRoom.length > 0) {
+        res.status(200).json({
+        message: "User already in room",
+        alreadyJoined: true
+      });
+      return;
+    }
+    
+    // Add user to room
+    await db.insert(userRooms).values({
+      userId: userId,
+      roomId: roomId
+    });
+    
+    // Update room member count if needed
+    if (roomExists.members !== null) {
+      await db.update(Room)
+        .set({ members: (roomExists.members + 1) })
+        .where(eq(Room.id, roomId));
+    } else {
+      // If members is null, initialize it to 1
+      await db.update(Room)
+        .set({ members: 1 })
+        .where(eq(Room.id, roomId));
+    }
+    
+    res.status(200).json({
+      message: "Successfully joined room",
+      roomName: roomExists.name
+    });
+    return;
+    
+  } catch (error) {
+    console.error("Error joining room:", error);
+    res.status(500).json({
+      message: "Failed to join room"
+    });
+    return;
+  }
+});
+
 app.listen(3002, () => {
   console.log("server started on port 3002");
 });

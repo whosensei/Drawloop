@@ -20,6 +20,7 @@ import { useToast } from "@/components/ui/use-toast"
 import axios from "axios"
 import { Room } from "@repo/db/schema"
 import { GetexistingRooms, Createroom, LeaveRoom } from "./getExistingRooms"
+import JoinRoom, { createSocketConnection } from "./joinRoom"
 
 
 // Define function to get rooms from backend
@@ -234,6 +235,7 @@ export default function Dashboard() {
             onClick={() => {
               if (roomToDelete) {
                 setRooms((prev) => [...prev, roomToDelete]);
+                //implement join-room 
                 toast({
                   variant: "success",
                   title: "Room Rejoined",
@@ -262,24 +264,63 @@ export default function Dashboard() {
     }
   }
 
-  const handleJoinRoom = async (name: string) => {
-    // const tok = localStorage.getItem("token")
-    // console.log(tok)
-    // if(tok){
-    //   const msg = await axios.post(`${process.env.NEXT_PUBLIC_HTTP_BACKEND}/create-room`,{
-    //     name:newRoomName
-    //   },{
-    //     headers:{
-    //       'authorization' : tok
-    //     }
-    //   })
-    //   console.log(msg)
-    // }
-    toast({
-      variant: "success",
-      title: "Joining Room",
-      description: `You are now joining "${name}".`,
-    })
+  const handleJoinRoom = async (id: string) => {
+    try {
+      // First find the room to get the name
+      const roomToJoin = rooms.find(room => room.id.toString() === id);
+      
+      if (!roomToJoin) {
+        throw new Error("Room not found");
+      }
+
+      // Call the backend API to add the user to the room
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("Authentication required");
+      }
+
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_HTTP_BACKEND}/add-user-to-room`, {
+        roomId: id
+      }, {
+        headers: {
+          'Authorization': token
+        },
+      });
+
+      const data = response.data;
+
+      if (response.status !== 200) {
+        throw new Error(data.message || "Failed to join room");
+      }
+
+      // Establish WebSocket connection for the room
+      try {
+        await createSocketConnection(id);
+        console.log("WebSocket connection established for room", id);
+      } catch (err) {
+        console.warn("WebSocket connection could not be established. Will try again when entering the room.", err);
+        // Continue even if the WebSocket connection fails, as RoomCanvas will try again
+      }
+
+      toast({
+        variant: "success",
+        title: "Joining Room",
+        description: `You are now joining "${roomToJoin.name}".`,
+      });
+      
+      // Redirect to the canvas page with the room ID
+      // We use setTimeout to ensure the toast is shown before redirecting
+      setTimeout(() => {
+        window.location.href = `/canvas/${id}`;
+      }, 1000);
+    } catch (error) {
+      console.error("Failed to join room:", error);
+      toast({
+        variant: "error",
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to join the room. Please try again."
+      });
+    }
   }
 
   // Filter rooms based on search query
@@ -387,7 +428,7 @@ export default function Dashboard() {
             <ClayRoomCard
               key={room.id}
               room={room}
-              onJoin={() => handleJoinRoom(room.name)}
+              onJoin={() => handleJoinRoom((room.id).toString())}
               onDelete={() => handleDeleteRoom(room.id, room.name)}
             />
           ))}
