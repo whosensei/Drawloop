@@ -26,14 +26,28 @@ export const chats = pgTable("chats", {
     createdAt: timestamp("created_at").defaultNow(),
 })
 
+// New join table for user-room relationships
+export const userRooms = pgTable("user_rooms", {
+    userId: integer("user_id").notNull().references(() => User.id),
+    roomId: integer("room_id").notNull().references(() => Room.id),
+}, (t) => ({
+    pk: primaryKey({ columns: [t.userId, t.roomId] }),
+}));
+
 export const usersRelations = relations(User, ({ many }) => ({
-    rooms: many(Room),
+    rooms: many(userRooms),
     chats: many(chats),
 }));
 
 export const roomsRelations = relations(Room, ({ one, many }) => ({
     admin: one(User, { fields: [Room.adminId], references: [User.id] }),
+    members: many(userRooms),
     chats: many(chats),
+}));
+
+export const userRoomsRelations = relations(userRooms, ({ one }) => ({
+    user: one(User, { fields: [userRooms.userId], references: [User.id] }),
+    room: one(Room, { fields: [userRooms.roomId], references: [Room.id] }),
 }));
 
 export const chatsRelations = relations(chats, ({ one }) => ({
