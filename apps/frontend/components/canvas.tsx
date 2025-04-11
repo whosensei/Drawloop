@@ -5,11 +5,13 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import DrawingToolbar from "@/components/drawing-toolbar"
 import { Game } from "@/app/draw/Game";
-import PillToolbar from "./toolbar";
+import DrawingToolbarProps from "./pill-toolbar";
 
 // import { WebSocket } from "ws";
 
-export type Tool = "pen"|"line" | "circle" | "rectangle" | "eraser" | null;
+// export type Tool = "pen"|"line" | "circle" | "rectangle" | "eraser" | null;
+export type Tool = "lock" | "rectangle" | "triangle" | "circle" | "arrow" | "line" | "pen"| null
+
 export type StrokeThickness = "1" | "3" | "6"
 
 export function Canvas({ roomId, socket }:
@@ -79,7 +81,7 @@ export function Canvas({ roomId, socket }:
             <canvas ref={Canvasref} width={window.innerWidth} height={window.innerHeight}></canvas>
             <div className="absolute top-1/64 left-1/2 -translate-x-1/2">
                 <div className="w-full max-w-3xl">
-                    <PillToolbar selectedTool={selectedTool} setSelectedTool={setSelectedTool} selectedColor={selectedColor} setSelectedColor={setSelectedColor} clear={clear} setclear={setclear} roomId={roomId}
+                    <DrawingToolbarProps selectedTool={selectedTool} setSelectedTool={setSelectedTool} selectedColor={selectedColor} setSelectedColor={setSelectedColor} clear={clear} setclear={setclear} roomId={roomId}
                     selectedbgColor= {selectedbgColor} setSelectedbgColor={setSelectedbgColor} thickness={thickness} setThickness={handleThicknessChange} saveAsImage={saveAsImage} />
                     {/* <NeumorphicPillToolbar /> */}
                 </div>

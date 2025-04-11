@@ -1,467 +1,474 @@
-// "use client"
+"use client"
 
-// import { useState, useEffect } from "react"
-// import { Circle, Square, Type, Minus, Eraser, Trash2, Check, Pencil, Save, Undo, Redo, Palette } from "lucide-react"
-// import { cn } from "@/lib/utils"
-// import { Button } from "@/components/ui/button"
-// import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-// import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-// import { clearAll } from "@/components/ui/clearAll"
-// import { toast } from "./ui/use-toast"
-// // import { HandleClearAll } from "./handleClearAll"
+import { useState, useEffect } from "react"
+import {
+  Lock,
+  Square,
+  Triangle,
+  Circle,
+  ArrowRight,
+  Minus,
+  Pen,
+  Share,
+  ChevronDown,
+  Sun,
+  Moon,
+  Trash2,
+  Save,
+} from "lucide-react"
+import { cn } from "@/lib/utils"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Button } from "@/components/ui/button"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { clearAll } from "@/components/ui/clearAll"
+import { toast } from "./ui/use-toast"
+import React from "react"
 
-// type Tool = "pen" | "line" | "circle" | "rectangle" | "eraser" | "text" | null
-// type StrokeThickness = "thin" | "medium" | "thick"
+export type Tool = "lock" | "rectangle" | "triangle" | "circle" | "arrow" | "line" | "pen" | null
 
-// interface DrawingToolbarProps {
-//     selectedTool: Tool;
-//     setSelectedTool: (tool: Tool) => void;
-//     selectedColor: string,
-//     setSelectedColor: (color: string) => void,
-//     clear: boolean,
-//     setclear: (clear: boolean) => void,
-//     roomId: string,
-//     selectedbgColor :string,
-//     setSelectedbgColor : (color:string)=>void
-// }
+interface DrawingToolbarProps {
+  selectedTool: Tool
+  setSelectedTool: (tool: Tool) => void
+  selectedColor: string
+  setSelectedColor: (color: string) => void
+  clear: boolean
+  setclear: (clear: boolean) => void
+  roomId: string
+  selectedbgColor: string
+  setSelectedbgColor: (color: string) => void
+  thickness: string
+  setThickness: (thickness: string) => void
+  saveAsImage?: () => void
+}
 
-// const predefinedColors = [
-//   "#000000", // Black
-//   "#FFFFFF", // White
-//   "#FF0000", // Red
-//   "#00FF00", // Green
-//   "#0000FF", // Blue
-//   "#FFFF00", // Yellow
-//   "#FF00FF", // Magenta
-//   "#00FFFF", // Cyan
-//   "#FFA500", // Orange
-//   "#800080", // Purple
-// ]
+export default function DrawingToolbar({
+  selectedTool,
+  setSelectedTool,
+  selectedColor,
+  setSelectedColor,
+  clear,
+  setclear,
+  roomId,
+  selectedbgColor,
+  setSelectedbgColor,
+  thickness,
+  setThickness,
+  saveAsImage,
+}: DrawingToolbarProps) {
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    // Initialize from localStorage or fallback to "light"
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('theme') as "light" | "dark" || "light";
+    }
+    return "light";
+  });
 
-// // Map thickness names to actual pixel values
-// const thicknessValues = {
-//   thin: 2,
-//   medium: 5,
-//   thick: 10,
-// }
+  const tools = [
+    { id: "lock" as Tool, icon: Lock, label: "Lock" },
+    { id: "rectangle" as Tool, icon: Square, label: "Rectangle" },
+    { id: "triangle" as Tool, icon: Triangle, label: "Triangle" },
+    { id: "circle" as Tool, icon: Circle, label: "Circle" },
+    { id: "arrow" as Tool, icon: ArrowRight, label: "Arrow" },
+    { id: "line" as Tool, icon: Minus, label: "Line" },
+    { id: "pen" as Tool, icon: Pen, label: "Pen" },
+  ]
 
-// export default function PillToolbar({ selectedTool, setSelectedTool, selectedColor, setSelectedColor, clear, setclear, roomId ,selectedbgColor,setSelectedbgColor}: DrawingToolbarProps) {
-// //   const [selectedTool, setSelectedTool] = useState<Tool>("pen")
-// //   const [selectedColor, setSelectedColor] = useState("#000000")
-//   const [customStrokeColor, setCustomStrokeColor] = useState("#000000")
-// //   const [selectedbgColor, setSelectedbgColor] = useState("#FFFFFF")
-//   const [customBgColor, setCustomBgColor] = useState("#FFFFFF")
-//   const [thickness, setThickness] = useState<StrokeThickness>("medium")
-//   const [canUndo, setCanUndo] = useState(false)
-//   const [canRedo, setCanRedo] = useState(false)
+  const strokeWidths = ["1", "2", "4", "6", "8"]
 
-//   // Initialize canUndo and canRedo state client-side only
-//   useEffect(() => {
-//     // Set initial state once client-side
-//     setCanUndo(false);
-//     setCanRedo(false);
-//   }, []);
+  const colorOptions = [
+    "#ffffff", // white
+    "#000000", // black
+    "#ef4444", // red
+    "#f97316", // orange
+    "#f59e0b", // amber
+    "#84cc16", // lime
+    "#10b981", // emerald
+    "#06b6d4", // cyan
+    "#3b82f6", // blue
+    "#6366f1", // indigo
+    "#8b5cf6", // violet
+    "#d946ef", // fuchsia
+  ]
 
-//   const handleToolClick = (tool: Tool) => {
-//     setSelectedTool(tool)
-//   }
+  const toggleTheme = () => {
+    const newTheme = theme === "light" ? "dark" : "light";
+    setTheme(newTheme);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('theme', newTheme);
+    }
+  }
 
-//   const handleStrokeColorChange = (color: string) => {
-//     setSelectedColor(color)
-//     setCustomStrokeColor(color)
-//   }
+  useEffect(() => {
+    // Update document theme if needed
+    document.documentElement.classList.toggle("dark", theme === "dark");
+  }, [theme]);
 
-//   const handleBgColorChange = (color: string) => {
-//     setSelectedbgColor(color)
-//     setCustomBgColor(color)
-//   }
+  // Load initial preferences from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // Load stored color preference for stroke
+      const storedColor = localStorage.getItem('selectedColor');
+      if (storedColor && storedColor !== selectedColor) {
+        setSelectedColor(storedColor);
+      }
+      
+      // Load stored color preference for background
+      const storedBgColor = localStorage.getItem('selectedbgColor');
+      if (storedBgColor && storedBgColor !== selectedbgColor) {
+        setSelectedbgColor(storedBgColor);
+      }
+      
+      // Load stored thickness preference
+      const storedThickness = localStorage.getItem('thickness');
+      if (storedThickness && storedThickness !== thickness) {
+        setThickness(storedThickness);
+      }
+    }
+  }, []);
 
-//   const handleClearAll = async() => {
-//     try {
-//         setclear(true);
-//         await clearAll(roomId);
-//         setSelectedTool(null);
-//         setCanUndo(false)
-//         setCanRedo(false)
-//         console.log("Clear all successful");
-//     } catch (error) {
-//         console.error("Failed to clear canvas:", error);
-//         toast({
-//             variant : "error",
-//             title :"Failed to clear canvas",
-//             description :"Please try again"
-//         })
-//     } finally {
-//         setclear(false);
-//     }
+  // Save preferences to localStorage when they change
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('selectedColor', selectedColor);
+    }
+  }, [selectedColor]);
 
-//   }
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('selectedbgColor', selectedbgColor);
+    }
+  }, [selectedbgColor]);
 
-//   const handleUndo = () => {
-//     console.log("Undo action")
-//     setCanRedo(true)
-//     // Don't use Math.random() as it causes hydration errors
-//     setCanUndo(false) // Set to a deterministic value instead
-//   }
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('thickness', thickness);
+    }
+  }, [thickness]);
 
-//   const handleRedo = () => {
-//     console.log("Redo action")
-//     // Don't use Math.random() as it causes hydration errors
-//     setCanRedo(false) // Set to a deterministic value instead
-//   }
+  const handleClearAll = async () => {
+    try {
+      setclear(true)
+      await clearAll(roomId)
+      setSelectedTool(null)
+      console.log("Clear all successful")
+    } catch (error) {
+      console.error("Failed to clear canvas:", error)
+      toast({
+        variant: "error",
+        title: "Failed to clear canvas",
+        description: "Please try again",
+      })
+    } finally {
+      // Use setTimeout to ensure the UI updates before clearing the flag
+      setTimeout(() => {
+        setclear(false)
+      }, 100)
+    }
+  }
 
-//   const handleSave = () => {
-//     console.log("Save drawing")
-//   }
+  return (
+    <div>
+      <div
+        className={cn(
+          "flex items-center gap-1 px-4 py-2",
+          "rounded-full",
+          theme === "light" ? "bg-white border border-gray-200" : "bg-gray-900 border border-gray-800",
+        )}
+      >
+        <TooltipProvider>
+          {tools.map((tool, index) => (
+            <React.Fragment key={tool.id}>
+              {index === 1 && (
+                <div
+                  className={cn("h-6 mx-2 border-l", theme === "light" ? "border-gray-300" : "border-gray-700")}
+                ></div>
+              )}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    className={cn(
+                      "p-2 transition-colors",
+                      "rounded-full",
+                      selectedTool === tool.id
+                        ? theme === "light"
+                          ? "bg-indigo-100 text-indigo-600"
+                          : "bg-indigo-900 text-indigo-300"
+                        : theme === "light"
+                          ? "text-gray-700 hover:bg-gray-100"
+                          : "text-gray-400 hover:bg-gray-800",
+                    )}
+                    onClick={() => setSelectedTool(tool.id)}
+                  >
+                    <tool.icon size={18} />
+                    <span className="sr-only">{tool.label}</span>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs">{tool.label}</p>
+                </TooltipContent>
+              </Tooltip>
+            </React.Fragment>
+          ))}
+        </TooltipProvider>
 
-//   return (
-//     <TooltipProvider delayDuration={300}>
-//       <div className="inline-flex items-center gap-1 p-1.5 bg-gray-100 rounded-full shadow-sm overflow-x-auto max-w-full">
-//         {/* Drawing Tools */}
-//         <div className="flex items-center bg-white rounded-full shadow-sm p-1 gap-0.5">
+        {/* Color and Stroke Options */}
+        <div className={cn("h-6 mx-2 border-l", theme === "light" ? "border-gray-300" : "border-gray-700")}></div>
 
-//         <Tooltip>
-//             <TooltipTrigger asChild>
-//               <Button
-//                 variant={selectedTool === "rectangle" ? "default" : "ghost"}
-//                 size="sm"
-//                 className={cn(
-//                   "h-8 w-8 p-0 rounded-full",
-//                   selectedTool === "rectangle" && "bg-gray-900 text-white hover:bg-gray-800",
-//                 )}
-//                 onClick={() => handleToolClick("rectangle")}
-//               >
-//                 <Square className="w-4 h-4" />
-//                 <span className="sr-only">Rectangle</span>
-//               </Button>
-//             </TooltipTrigger>
-//             <TooltipContent>Rectangle</TooltipContent>
-//           </Tooltip>
+        {/* Stroke Color */}
+        <Popover>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <PopoverTrigger asChild>
+                  <button
+                    className={cn(
+                      "p-2 flex items-center justify-center",
+                      "rounded-full",
+                      theme === "light" ? "border border-gray-200" : "border border-gray-700",
+                    )}
+                  >
+                    <div
+                      className="w-4 h-4 rounded-full border border-gray-400"
+                      style={{ backgroundColor: selectedColor }}
+                    ></div>
+                  </button>
+                </PopoverTrigger>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="text-xs">Stroke Color</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <PopoverContent className="w-64 p-2">
+            <Tabs defaultValue="preset">
+              <TabsList className="w-full mb-2">
+                <TabsTrigger value="preset" className="flex-1">
+                  Presets
+                </TabsTrigger>
+                <TabsTrigger value="custom" className="flex-1">
+                  Custom
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="preset" className="grid grid-cols-6 gap-1">
+                {colorOptions.map((color) => (
+                  <button
+                    key={color}
+                    className={cn(
+                      "w-8 h-8 rounded-full border",
+                      color === selectedColor ? "ring-2 ring-offset-2 ring-blue-500" : "",
+                      theme === "light" ? "border-gray-300" : "border-gray-600",
+                    )}
+                    style={{ backgroundColor: color }}
+                    onClick={() => setSelectedColor(color)}
+                  ></button>
+                ))}
+              </TabsContent>
+              <TabsContent value="custom">
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-medium">Custom Color</label>
+                  <input
+                    type="color"
+                    value={selectedColor}
+                    onChange={(e) => setSelectedColor(e.target.value)}
+                    className="w-full h-8"
+                  />
+                </div>
+              </TabsContent>
+            </Tabs>
+          </PopoverContent>
+        </Popover>
 
-//           <Tooltip>
-//             <TooltipTrigger asChild>
-//               <Button
-//                 variant={selectedTool === "line" ? "default" : "ghost"}
-//                 size="sm"
-//                 className={cn(
-//                   "h-8 w-8 p-0 rounded-full",
-//                   selectedTool === "line" && "bg-gray-900 text-white hover:bg-gray-800",
-//                 )}
-//                 onClick={() => handleToolClick("line")}
-//               >
-//                 <Minus className="w-4 h-4" />
-//                 <span className="sr-only">Line</span>
-//               </Button>
-//             </TooltipTrigger>
-//             <TooltipContent>Line</TooltipContent>
-//           </Tooltip>
+        {/* Fill Color */}
+        <Popover>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <PopoverTrigger asChild>
+                  <button
+                    className={cn(
+                      "p-2 flex items-center justify-center",
+                      "rounded-full",
+                      theme === "light" ? "border border-gray-200" : "border border-gray-700",
+                    )}
+                  >
+                    <div
+                      className="w-4 h-4 rounded-full border border-gray-400"
+                      style={{ backgroundColor: selectedbgColor }}
+                    ></div>
+                  </button>
+                </PopoverTrigger>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="text-xs">Fill Color</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <PopoverContent className="w-64 p-2">
+            <Tabs defaultValue="preset">
+              <TabsList className="w-full mb-2">
+                <TabsTrigger value="preset" className="flex-1">
+                  Presets
+                </TabsTrigger>
+                <TabsTrigger value="custom" className="flex-1">
+                  Custom
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="preset" className="grid grid-cols-6 gap-1">
+                {colorOptions.map((color) => (
+                  <button
+                    key={color}
+                    className={cn(
+                      "w-8 h-8 rounded-full border",
+                      color === selectedbgColor ? "ring-2 ring-offset-2 ring-blue-500" : "",
+                      theme === "light" ? "border-gray-300" : "border-gray-600",
+                    )}
+                    style={{ backgroundColor: color }}
+                    onClick={() => setSelectedbgColor(color)}
+                  ></button>
+                ))}
+              </TabsContent>
+              <TabsContent value="custom">
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-medium">Custom Color</label>
+                  <input
+                    type="color"
+                    value={selectedbgColor}
+                    onChange={(e) => setSelectedbgColor(e.target.value)}
+                    className="w-full h-8"
+                  />
+                </div>
+              </TabsContent>
+            </Tabs>
+          </PopoverContent>
+        </Popover>
 
-//           <Tooltip>
-//             <TooltipTrigger asChild>
-//               <Button
-//                 variant={selectedTool === "circle" ? "default" : "ghost"}
-//                 size="sm"
-//                 className={cn(
-//                   "h-8 w-8 p-0 rounded-full",
-//                   selectedTool === "circle" && "bg-gray-900 text-white hover:bg-gray-800",
-//                 )}
-//                 onClick={() => handleToolClick("circle")}
-//               >
-//                 <Circle className="w-4 h-4" />
-//                 <span className="sr-only">Circle</span>
-//               </Button>
-//             </TooltipTrigger>
-//             <TooltipContent>Circle</TooltipContent>
-//           </Tooltip>
+        {/* Stroke Width */}
+        <DropdownMenu>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className={cn(
+                      "p-2 flex items-center justify-center gap-1",
+                      "rounded-full",
+                      theme === "light"
+                        ? "border border-gray-200 text-gray-700"
+                        : "border border-gray-700 text-gray-300",
+                    )}
+                  >
+                    <div
+                      className="rounded-full bg-current"
+                      style={{
+                        width: `${Number.parseInt(thickness) * 2}px`,
+                        height: `${Number.parseInt(thickness)}px`,
+                      }}
+                    ></div>
+                    <ChevronDown size={12} />
+                  </button>
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="text-xs">Stroke Width</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <DropdownMenuContent align="end">
+            {strokeWidths.map((width) => (
+              <DropdownMenuItem key={width} className="flex items-center gap-3" onClick={() => setThickness(width)}>
+                <div
+                  className="rounded-full bg-current"
+                  style={{ width: `${Number.parseInt(width) * 3}px`, height: `${Number.parseInt(width)}px` }}
+                ></div>
+                <span>{width}px</span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
 
-//           <Tooltip>
-//             <TooltipTrigger asChild>
-//               <Button
-//                 variant={selectedTool === "pen" ? "default" : "ghost"}
-//                 size="sm"
-//                 className={cn(
-//                   "h-8 w-8 p-0 rounded-full",
-//                   selectedTool === "pen" && "bg-gray-900 text-white hover:bg-gray-800",
-//                 )}
-//                 onClick={() => handleToolClick("pen")}
-//               >
-//                 <Pencil className="w-4 h-4" />
-//                 <span className="sr-only">Pen</span>
-//               </Button>
-//             </TooltipTrigger>
-//             <TooltipContent>Pen</TooltipContent>
-//           </Tooltip>
+        <div className={cn("h-6 mx-2 border-l", theme === "light" ? "border-gray-300" : "border-gray-700")}></div>
 
-//           <Tooltip>
-//             <TooltipTrigger asChild>
-//               <Button
-//                 variant={selectedTool === "text" ? "default" : "ghost"}
-//                 size="sm"
-//                 className={cn(
-//                   "h-8 w-8 p-0 rounded-full",
-//                   selectedTool === "text" && "bg-gray-900 text-white hover:bg-gray-800",
-//                 )}
-//                 onClick={() => handleToolClick("text")}
-//               >
-//                 <Type className="w-4 h-4" />
-//                 <span className="sr-only">Text</span>
-//               </Button>
-//             </TooltipTrigger>
-//             <TooltipContent>Text</TooltipContent>
-//           </Tooltip>
+        {/* Theme Toggle */}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                className={cn(
+                  "p-2 transition-colors rounded-full",
+                  theme === "light" ? "text-gray-700 hover:bg-gray-100" : "text-gray-400 hover:bg-gray-800",
+                )}
+                onClick={toggleTheme}
+              >
+                {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
+                <span className="sr-only">{theme === "light" ? "Dark Mode" : "Light Mode"}</span>
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="text-xs">{theme === "light" ? "Dark Mode" : "Light Mode"}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
 
-//           <Tooltip>
-//             <TooltipTrigger asChild>
-//               <Button
-//                 variant={selectedTool === "eraser" ? "default" : "ghost"}
-//                 size="sm"
-//                 className={cn(
-//                   "h-8 w-8 p-0 rounded-full",
-//                   selectedTool === "eraser" && "bg-gray-900 text-white hover:bg-gray-800",
-//                 )}
-//                 onClick={() => handleToolClick("eraser")}
-//               >
-//                 <Eraser className="w-4 h-4" />
-//                 <span className="sr-only">Eraser</span>
-//               </Button>
-//             </TooltipTrigger>
-//             <TooltipContent>Eraser</TooltipContent>
-//           </Tooltip>
-//         </div>
+        <div className={cn("h-6 mx-2 border-l", theme === "light" ? "border-gray-300" : "border-gray-700")}></div>
 
-//         {/* Thickness Buttons */}
-//         <div className="flex items-center bg-white rounded-full shadow-sm p-1 gap-0.5">
-//           <Tooltip>
-//             <TooltipTrigger asChild>
-//               <Button
-//                 variant={thickness === "thin" ? "default" : "ghost"}
-//                 size="sm"
-//                 className={cn(
-//                   "h-8 w-8 p-0 rounded-full flex items-center justify-center",
-//                   thickness === "thin" && "bg-gray-900 text-white hover:bg-gray-800",
-//                 )}
-//                 onClick={() => setThickness("thin")}
-//               >
-//                 <div className="w-4 h-0.5 bg-current rounded-full" />
-//                 <span className="sr-only">Thin</span>
-//               </Button>
-//             </TooltipTrigger>
-//             <TooltipContent>Thin</TooltipContent>
-//           </Tooltip>
+        <div className="ml-auto flex items-center gap-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  className={cn(
+                    "p-2 transition-colors rounded-full",
+                    theme === "light" ? "text-gray-700 hover:bg-gray-100" : "text-gray-400 hover:bg-gray-800",
+                  )}
+                  onClick={handleClearAll}
+                >
+                  <Trash2 size={18} />
+                  <span className="sr-only">Clear Canvas</span>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="text-xs">Clear Canvas</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
-//           <Tooltip>
-//             <TooltipTrigger asChild>
-//               <Button
-//                 variant={thickness === "medium" ? "default" : "ghost"}
-//                 size="sm"
-//                 className={cn(
-//                   "h-8 w-8 p-0 rounded-full flex items-center justify-center",
-//                   thickness === "medium" && "bg-gray-900 text-white hover:bg-gray-800",
-//                 )}
-//                 onClick={() => setThickness("medium")}
-//               >
-//                 <div className="w-4 h-1 bg-current rounded-full" />
-//                 <span className="sr-only">Medium</span>
-//               </Button>
-//             </TooltipTrigger>
-//             <TooltipContent>Medium</TooltipContent>
-//           </Tooltip>
+          {saveAsImage && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    className={cn(
+                      "p-2 transition-colors rounded-full",
+                      theme === "light" ? "text-gray-700 hover:bg-gray-100" : "text-gray-400 hover:bg-gray-800",
+                    )}
+                    onClick={saveAsImage}
+                  >
+                    <Save size={18} />
+                    <span className="sr-only">Save Image</span>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs">Save Image</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
 
-//           <Tooltip>
-//             <TooltipTrigger asChild>
-//               <Button
-//                 variant={thickness === "thick" ? "default" : "ghost"}
-//                 size="sm"
-//                 className={cn(
-//                   "h-8 w-8 p-0 rounded-full flex items-center justify-center",
-//                   thickness === "thick" && "bg-gray-900 text-white hover:bg-gray-800",
-//                 )}
-//                 onClick={() => setThickness("thick")}
-//               >
-//                 <div className="w-4 h-2 bg-current rounded-full" />
-//                 <span className="sr-only">Thick</span>
-//               </Button>
-//             </TooltipTrigger>
-//             <TooltipContent>Thick</TooltipContent>
-//           </Tooltip>
-//         </div>
-
-//         {/* Color Pickers */}
-//         <div className="flex items-center bg-white rounded-full shadow-sm p-1 gap-1">
-//           <Popover>
-//             <Tooltip>
-//               <TooltipTrigger asChild>
-//                 <PopoverTrigger asChild>
-//                   <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full relative">
-//                     <div className="absolute inset-0 m-2 rounded-full" style={{ backgroundColor: selectedColor }} />
-//                   </Button>
-//                 </PopoverTrigger>
-//               </TooltipTrigger>
-//               <TooltipContent>Stroke Color</TooltipContent>
-//             </Tooltip>
-//             <PopoverContent className="w-64 p-0" align="start">
-//               <div className="p-2 border-b">
-//                 <div className="font-medium mb-1.5">Stroke Color</div>
-//                 <div className="grid grid-cols-5 gap-1">
-//                   {predefinedColors.map((color) => (
-//                     <button
-//                       key={color}
-//                       className={cn(
-//                         "w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center",
-//                         selectedColor === color && "ring-2 ring-black",
-//                       )}
-//                       style={{ backgroundColor: color }}
-//                       onClick={() => handleStrokeColorChange(color)}
-//                     >
-//                       {selectedColor === color && (
-//                         <Check
-//                           className={cn(
-//                             "w-4 h-4",
-//                             color === "#FFFFFF" || color === "#FFFF00" || color === "#00FF00" || color === "#00FFFF"
-//                               ? "text-black"
-//                               : "text-white",
-//                           )}
-//                         />
-//                       )}
-//                     </button>
-//                   ))}
-//                 </div>
-//               </div>
-//               <div className="p-2">
-//                 <div className="font-medium mb-1.5">Custom Color</div>
-//                 <div className="flex gap-2">
-//                   <input
-//                     type="color"
-//                     value={customStrokeColor}
-//                     onChange={(e) => setCustomStrokeColor(e.target.value)}
-//                     className="w-8 h-8 rounded-full"
-//                   />
-//                   <Button className="flex-1" size="sm" onClick={() => handleStrokeColorChange(customStrokeColor)}>
-//                     Apply
-//                   </Button>
-//                 </div>
-//               </div>
-//             </PopoverContent>
-//           </Popover>
-
-//           <Popover>
-//             <Tooltip>
-//               <TooltipTrigger asChild>
-//                 <PopoverTrigger asChild>
-//                   <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full relative">
-//                     <div
-//                       className="absolute inset-0 m-2 rounded-full border border-gray-300"
-//                       style={{ backgroundColor: selectedbgColor }}
-//                     />
-//                     <div className="absolute bottom-1 right-1 w-2.5 h-2.5 bg-white border border-gray-300 rounded-full">
-//                       <Palette className="w-1.5 h-1.5 text-gray-500" />
-//                     </div>
-//                   </Button>
-//                 </PopoverTrigger>
-//               </TooltipTrigger>
-//               <TooltipContent>Background Color</TooltipContent>
-//             </Tooltip>
-//             <PopoverContent className="w-64 p-0" align="start">
-//               <div className="p-2 border-b">
-//                 <div className="font-medium mb-1.5">Background Color</div>
-//                 <div className="grid grid-cols-5 gap-1">
-//                   {predefinedColors.map((color) => (
-//                     <button
-//                       key={color}
-//                       className={cn(
-//                         "w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center",
-//                         selectedbgColor === color && "ring-2 ring-black",
-//                       )}
-//                       style={{ backgroundColor: color }}
-//                       onClick={() => handleBgColorChange(color)}
-//                     >
-//                       {selectedbgColor === color && (
-//                         <Check
-//                           className={cn(
-//                             "w-4 h-4",
-//                             color === "#FFFFFF" || color === "#FFFF00" || color === "#00FF00" || color === "#00FFFF"
-//                               ? "text-black"
-//                               : "text-white",
-//                           )}
-//                         />
-//                       )}
-//                     </button>
-//                   ))}
-//                 </div>
-//               </div>
-//               <div className="p-2">
-//                 <div className="font-medium mb-1.5">Custom Background</div>
-//                 <div className="flex gap-2">
-//                   <input
-//                     type="color"
-//                     value={customBgColor}
-//                     onChange={(e) => setCustomBgColor(e.target.value)}
-//                     className="w-8 h-8 rounded-full"
-//                   />
-//                   <Button className="flex-1" size="sm" onClick={() => handleBgColorChange(customBgColor)}>
-//                     Apply
-//                   </Button>
-//                 </div>
-//               </div>
-//             </PopoverContent>
-//           </Popover>
-//         </div>
-
-//         {/* Action Buttons */}
-//         <div className="flex items-center bg-white rounded-full shadow-sm p-1 gap-0.5 ml-auto">
-//           <Tooltip>
-//             <TooltipTrigger asChild>
-//               <Button
-//                 variant="ghost"
-//                 size="sm"
-//                 onClick={handleUndo}
-//                 disabled={!canUndo}
-//                 className="h-8 w-8 p-0 rounded-full"
-//               >
-//                 <Undo className="w-4 h-4" />
-//                 <span className="sr-only">Undo</span>
-//               </Button>
-//             </TooltipTrigger>
-//             <TooltipContent>Undo</TooltipContent>
-//           </Tooltip>
-
-//           <Tooltip>
-//             <TooltipTrigger asChild>
-//               <Button
-//                 variant="ghost"
-//                 size="sm"
-//                 onClick={handleRedo}
-//                 disabled={!canRedo}
-//                 className="h-8 w-8 p-0 rounded-full"
-//               >
-//                 <Redo className="w-4 h-4" />
-//                 <span className="sr-only">Redo</span>
-//               </Button>
-//             </TooltipTrigger>
-//             <TooltipContent>Redo</TooltipContent>
-//           </Tooltip>
-
-//           <Tooltip>
-//             <TooltipTrigger asChild>
-//               <Button variant="ghost" size="sm" onClick={handleSave} className="h-8 w-8 p-0 rounded-full">
-//                 <Save className="w-4 h-4" />
-//                 <span className="sr-only">Save</span>
-//               </Button>
-//             </TooltipTrigger>
-//             <TooltipContent>Save</TooltipContent>
-//           </Tooltip>
-
-//           <Tooltip>
-//             <TooltipTrigger asChild>
-//               <Button variant="ghost" size="sm" onClick={handleClearAll/*()=>HandleClearAll(setclear,setSelectedTool,setCanUndo,setCanRedo,roomId)*/} className="h-8 w-8 p-0 rounded-full">
-//                 <Trash2 className="w-4 h-4" />
-//                 <span className="sr-only">Clear All</span>
-//               </Button>
-//             </TooltipTrigger>
-//             <TooltipContent>Clear All</TooltipContent>
-//           </Tooltip>
-//         </div>
-//       </div>
-//     </TooltipProvider>
-//   )
-// }
+          <Button
+            className={cn(
+              "rounded-full",
+              theme === "light"
+                ? "bg-indigo-100 text-indigo-600 hover:bg-indigo-200"
+                : "bg-indigo-600 text-white hover:bg-indigo-700",
+            )}
+          >
+            <Share size={18} className="mr-2" />
+            Share
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
