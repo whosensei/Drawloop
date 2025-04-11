@@ -112,68 +112,6 @@ export async function initDraw(canvas: HTMLCanvasElement, roomId: string, socket
         StartX = e.clientX;
         StartY = e.clientY;
         
-        if (tool === "text") {
-            // Handle text input
-            isAddingText = true;
-            
-            // Remove any existing text input
-            if (textInputElement) {
-                document.body.removeChild(textInputElement);
-            }
-            
-            // Create text input element
-            textInputElement = document.createElement("textarea");
-            textInputElement.style.position = "absolute";
-            textInputElement.style.left = `${e.clientX}px`;
-            textInputElement.style.top = `${e.clientY}px`;
-            textInputElement.style.color = color;
-            textInputElement.style.backgroundColor = "transparent";
-            textInputElement.style.border = "1px dashed " + color;
-            textInputElement.style.outline = "none";
-            textInputElement.style.font = `${Number(thickness) * 5 + 10}px sans-serif`;
-            textInputElement.style.zIndex = "1000";
-            textInputElement.style.minWidth = "100px";
-            textInputElement.style.minHeight = "20px";
-            
-            // Add keydown event for handling text submission
-            textInputElement.addEventListener("keydown", (ke) => {
-                if (ke.key === "Enter" && !ke.shiftKey) {
-                    ke.preventDefault();
-                    const content = textInputElement!.value.trim();
-                    if (content) {
-                        // Add text to the canvas
-                        const textShape: shapes = {
-                            type: "text",
-                            x: e.clientX,
-                            y: e.clientY,
-                            content: content,
-                            color: color,
-                            fontSize: Number(thickness) * 5 + 10
-                        };
-                        
-                        // Send to server
-                        const data = JSON.stringify({
-                            type: "chat",
-                            message: JSON.stringify({ shape: textShape }),
-                            roomId
-                        });
-                        socket.send(data);
-                        
-                        // Remove the textarea
-                        if (textInputElement) {
-                            document.body.removeChild(textInputElement);
-                            textInputElement = null;
-                        }
-                        isAddingText = false;
-                    }
-                }
-            });
-            
-            document.body.appendChild(textInputElement);
-            textInputElement.focus();
-            return;
-        }
-        
         if (tool === "eraser") {
             // For eraser, we'll track objects to remove on mouseup
             currentEraserPoints = [{ x: StartX, y: StartY }];

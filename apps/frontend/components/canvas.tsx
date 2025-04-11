@@ -4,10 +4,13 @@ import { initDraw } from "@/app/draw";
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import DrawingToolbar from "@/components/drawing-toolbar"
+import { Game } from "@/app/draw/Game";
 import PillToolbar from "./toolbar";
 
 // import { WebSocket } from "ws";
 
+export type Tool = "pen"|"line" | "circle" | "rectangle" | "eraser" | null;
+export type StrokeThickness = "1" | "3" | "6"
 
 export function Canvas({ roomId, socket }:
     {
@@ -15,21 +18,20 @@ export function Canvas({ roomId, socket }:
         roomId: string
     }) {
 
-    type Tool = "pen"|"line" | "circle" | "rectangle" | "eraser" | null;
-    type StrokeThickness = "1" | "3" | "6"
 
     const [selectedTool, setSelectedTool] = useState<Tool>(null)
     const [selectedColor, setSelectedColor] = useState("#000000")
     const [selectedbgColor, setSelectedbgColor] = useState("#FFFFFF")
     const [clear,setclear] = useState<true | false>(false)
     const [thickness, setThickness] = useState<StrokeThickness>("1")
+    const [game, setGame] = useState<Game>();
 
     // Wrapper function to handle type conversion
     const handleThicknessChange = (value: string) => {
         setThickness(value as StrokeThickness);
     }
 
-    const Canvasref = useRef(null);
+    const Canvasref = useRef<HTMLCanvasElement>(null);
 
     const saveAsImage = () => {
         if (Canvasref.current) {
@@ -44,21 +46,42 @@ export function Canvas({ roomId, socket }:
     };
 
     useEffect(() => {
+        game?.setTool(selectedTool);
+        game?.setColor(selectedColor);
+        game?.setBgColor(selectedbgColor);
+        game?.setThickness(thickness);
+    }, [selectedTool, selectedColor, selectedbgColor, thickness, game]);
+
+    useEffect(() => {
+        if (clear && game) {
+            game.clearAll();
+        }
+    }, [clear, game]);
+
+    useEffect(() => {
         
         if (Canvasref.current) {
-            const canvas = Canvasref.current
-            initDraw(canvas, roomId, socket, selectedTool,selectedColor,selectedbgColor,thickness)
+            const g = new Game(Canvasref.current, roomId, socket);
+            setGame(g);
+
+            return () => {
+                g.destroy();
+            }
         }
 
-    }, [Canvasref, selectedTool,selectedColor,clear,selectedbgColor,thickness])
+    }, [Canvasref])
 
     return (
-        <div>
-            <canvas ref={Canvasref} width={2000} height={1000}></canvas>
+        <div style={{
+            height: "100vh",
+            overflow: "hidden"
+        }}>
+            <canvas ref={Canvasref} width={window.innerWidth} height={window.innerHeight}></canvas>
             <div className="absolute top-1/64 left-1/2 -translate-x-1/2">
                 <div className="w-full max-w-3xl">
                     <PillToolbar selectedTool={selectedTool} setSelectedTool={setSelectedTool} selectedColor={selectedColor} setSelectedColor={setSelectedColor} clear={clear} setclear={setclear} roomId={roomId}
                     selectedbgColor= {selectedbgColor} setSelectedbgColor={setSelectedbgColor} thickness={thickness} setThickness={handleThicknessChange} saveAsImage={saveAsImage} />
+                    {/* <NeumorphicPillToolbar /> */}
                 </div>
             </div>
         </div>
