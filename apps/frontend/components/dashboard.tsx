@@ -19,7 +19,7 @@ import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
 import axios from "axios"
 import { Room } from "@repo/db/schema"
-import { GetexistingRooms, Createroom } from "./getExistingRooms"
+import { GetexistingRooms, Createroom, LeaveRoom } from "./getExistingRooms"
 
 
 // Define function to get rooms from backend
@@ -213,34 +213,53 @@ export default function Dashboard() {
     }
   }
 
-  const handleDeleteRoom = (id: number, name: string) => {
-    const roomToDelete = rooms.find((room) => room.id === id)
-    setRooms(rooms.filter((room) => room.id !== id))
+  const handleDeleteRoom = async (id: number, name: string) => {
+    try {
+      // Visually remove the room from UI first for better UX
+      const roomToDelete = rooms.find((room) => room.id === id);
+      setRooms(rooms.filter((room) => room.id !== id));
+      
+      // Call the backend to delete the room for the current user
+      await LeaveRoom(id);
 
-    toast({
-      variant: "info",
-      title: "Room Deleted",
-      description: `"${name}" has been deleted.`,
-      action: (
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 border-white/10 bg-white/5 hover:bg-white/10"
-          onClick={() => {
-            if (roomToDelete) {
-              setRooms((prev) => [...prev, roomToDelete])
-              toast({
-                variant: "success",
-                title: "Room Restored",
-                description: `"${name}" has been restored.`,
-              })
-            }
-          }}
-        >
-          Undo
-        </Button>
-      ),
-    })
+      toast({
+        variant: "info",
+        title: "Room Removed",
+        description: `You have left "${name}".`,
+        action: (
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 border-white/10 bg-white/5 hover:bg-white/10"
+            onClick={() => {
+              if (roomToDelete) {
+                setRooms((prev) => [...prev, roomToDelete]);
+                toast({
+                  variant: "success",
+                  title: "Room Rejoined",
+                  description: `You have rejoined "${name}".`,
+                });
+              }
+            }}
+          >
+            Undo
+          </Button>
+        ),
+      });
+    } catch (error) {
+      console.error("Failed to leave room:", error);
+      toast({
+        variant: "error",
+        title: "Error",
+        description: "Failed to leave the room. Please try again."
+      });
+      
+      // If there was an error, add the room back to the UI
+      const roomToDelete = rooms.find((room) => room.id === id);
+      if (roomToDelete) {
+        setRooms((prev) => [...prev, roomToDelete]);
+      }
+    }
   }
 
   const handleJoinRoom = async (name: string) => {

@@ -34,3 +34,20 @@ export async function Createroom(newRoomName:string) {
         console.error("failed to create room",e)
     }
 }
+
+export async function LeaveRoom(roomId: number) {
+    try {
+        const token = localStorage.getItem("token");
+        if (!token) throw new Error("Authentication required");
+
+        const response = await axios.delete(`${process.env.NEXT_PUBLIC_HTTP_BACKEND}/delete-room/${roomId}`, {
+            headers: {
+                'authorization': token
+            }
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Failed to leave room:", error);
+        throw error;
+    }
+}
