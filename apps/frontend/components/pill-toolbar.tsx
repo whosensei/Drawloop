@@ -1,5 +1,4 @@
 "use client"
-
 import { useState, useEffect } from "react"
 import {
   Lock,
@@ -11,10 +10,9 @@ import {
   Pen,
   Share,
   ChevronDown,
-  Sun,
-  Moon,
   Trash2,
   Save,
+  Eraser,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -22,11 +20,12 @@ import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useTheme} from "./theme-toggle"
+import React from "react"
 import { clearAll } from "@/components/ui/clearAll"
 import { toast } from "./ui/use-toast"
-import React from "react"
 
-export type Tool = "lock" | "rectangle" | "triangle" | "circle" | "arrow" | "line" | "pen" | null
+export type Tool = "lock" | "rectangle" | "triangle" | "circle" | "arrow" | "line" | "pen" | "eraser" | null
 
 interface DrawingToolbarProps {
   selectedTool: Tool
@@ -57,13 +56,7 @@ export default function DrawingToolbar({
   setThickness,
   saveAsImage,
 }: DrawingToolbarProps) {
-  const [theme, setTheme] = useState<"light" | "dark">(() => {
-    // Initialize from localStorage or fallback to "light"
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('theme') as "light" | "dark" || "light";
-    }
-    return "light";
-  });
+  const { theme } = useTheme()
 
   const tools = [
     { id: "lock" as Tool, icon: Lock, label: "Lock" },
@@ -73,6 +66,7 @@ export default function DrawingToolbar({
     { id: "arrow" as Tool, icon: ArrowRight, label: "Arrow" },
     { id: "line" as Tool, icon: Minus, label: "Line" },
     { id: "pen" as Tool, icon: Pen, label: "Pen" },
+    { id: "eraser" as Tool, icon: Eraser, label: "Eraser" },
   ]
 
   const strokeWidths = ["1", "2", "4", "6", "8"]
@@ -92,18 +86,10 @@ export default function DrawingToolbar({
     "#d946ef", // fuchsia
   ]
 
-  const toggleTheme = () => {
-    const newTheme = theme === "light" ? "dark" : "light";
-    setTheme(newTheme);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('theme', newTheme);
-    }
-  }
-
-  useEffect(() => {
-    // Update document theme if needed
-    document.documentElement.classList.toggle("dark", theme === "dark");
-  }, [theme]);
+  // useEffect(() => {
+  //   // Update document theme if needed
+  //   document.documentElement.classList.toggle("dark", theme === "dark");
+  // }, [theme]);
 
   // Load initial preferences from localStorage
   useEffect(() => {
@@ -174,7 +160,10 @@ export default function DrawingToolbar({
         className={cn(
           "flex items-center gap-1 px-4 py-2",
           "rounded-full",
-          theme === "light" ? "bg-white border border-gray-200" : "bg-gray-900 border border-gray-800",
+          "shadow-lg",
+          theme === "light"
+            ? "bg-white border border-gray-200 shadow-gray-200/50"
+            : "bg-[#2e2d39] border border-gray-800 shadow-black/30",
         )}
       >
         <TooltipProvider>
@@ -387,29 +376,6 @@ export default function DrawingToolbar({
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
-
-        <div className={cn("h-6 mx-2 border-l", theme === "light" ? "border-gray-300" : "border-gray-700")}></div>
-
-        {/* Theme Toggle */}
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                className={cn(
-                  "p-2 transition-colors rounded-full",
-                  theme === "light" ? "text-gray-700 hover:bg-gray-100" : "text-gray-400 hover:bg-gray-800",
-                )}
-                onClick={toggleTheme}
-              >
-                {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
-                <span className="sr-only">{theme === "light" ? "Dark Mode" : "Light Mode"}</span>
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p className="text-xs">{theme === "light" ? "Dark Mode" : "Light Mode"}</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
 
         <div className={cn("h-6 mx-2 border-l", theme === "light" ? "border-gray-300" : "border-gray-700")}></div>
 

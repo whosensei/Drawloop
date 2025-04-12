@@ -9,14 +9,11 @@ export async function GetexistingRooms(){
             return [];
         }
         
-        console.log("Fetching rooms from backend...");
         const Roomsdata = await axios.get(`${process.env.NEXT_PUBLIC_HTTP_BACKEND}/rooms`,{
             headers:{
                 'authorization' : tok
             }
         });
-        
-        console.log("Rooms data received:", Roomsdata.data);
         
         if (!Roomsdata.data.rooms || !Array.isArray(Roomsdata.data.rooms)) {
             console.error("Invalid rooms data format:", Roomsdata.data);

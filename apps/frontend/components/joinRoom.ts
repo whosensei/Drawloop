@@ -19,7 +19,6 @@ export default function JoinRoom(roomId: string) {
 
             // Handle connection open
             ws.onopen = () => {
-                console.log(`WebSocket connected for room ${roomId}`);
                 setSocket(ws);
                 
                 // Send join message to the server
@@ -29,7 +28,6 @@ export default function JoinRoom(roomId: string) {
                 });
                 
                 ws.send(joinMessage);
-                console.log(`Join message sent for room ${roomId}`);
             };
 
             // Handle errors
@@ -39,7 +37,6 @@ export default function JoinRoom(roomId: string) {
 
             // Handle connection close
             ws.onclose = () => {
-                console.log("WebSocket connection closed");
                 setSocket(null);
             };
 
@@ -52,7 +49,6 @@ export default function JoinRoom(roomId: string) {
                         roomId: roomId
                     });
                     ws.send(leaveMessage);
-                    console.log(`Leave message sent for room ${roomId}`);
                 }
                 ws.close();
             };
@@ -79,8 +75,6 @@ export function createSocketConnection(roomId: string): Promise<WebSocket> {
 
             // Handle connection open
             ws.onopen = () => {
-                console.log(`WebSocket connected for room ${roomId}`);
-                
                 // Send join message to the server
                 const joinMessage = JSON.stringify({
                     type: "join",
@@ -88,7 +82,6 @@ export function createSocketConnection(roomId: string): Promise<WebSocket> {
                 });
                 
                 ws.send(joinMessage);
-                console.log(`Join message sent for room ${roomId}`);
                 resolve(ws);
             };
 

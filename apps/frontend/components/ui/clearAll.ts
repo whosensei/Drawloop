@@ -5,9 +5,9 @@ export async function clearAll(
 ) {
     try{
         const sanitizedRoomId = roomId.replace(/[^0-9]/,"");
-        console.log(sanitizedRoomId)
         await axios.delete(`${process.env.NEXT_PUBLIC_HTTP_BACKEND!}/chats/${sanitizedRoomId}`)
     }catch(error){
-        console.log("Failed to get ")
+        // Failed to clear the room
+        console.error("Failed to clear the room",error)
     }
 }

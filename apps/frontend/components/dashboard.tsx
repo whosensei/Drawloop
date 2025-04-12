@@ -149,12 +149,9 @@ export default function Dashboard() {
   const { toast } = useToast()
 
   useEffect(() => {
-    console.log("refreshTrigger changed to:", refreshTrigger);
     async function loadRooms() {
       try {
-        console.log("Starting to load rooms from API...");
         const initialRooms: Room[] = await GetexistingRooms();
-        console.log("Loaded rooms from API:", initialRooms);
         const colors = ["indigo", "violet", "rose", "amber", "cyan"]
         const uiroom = initialRooms.map((room: Room,index:number) => ({
           id: room.id,
@@ -163,7 +160,6 @@ export default function Dashboard() {
           members: room.members || 0,
           color: colors[index % colors.length]
         }));
-        console.log("Transformed rooms for UI:", uiroom);
         setRooms(uiroom);
       }
       catch (e) {
@@ -177,7 +173,6 @@ export default function Dashboard() {
   useEffect(() => {
     // When component mounts, check if returning from canvas
     const isReturningFromCanvas = sessionStorage.getItem('returningFromCanvas');
-    console.log("Is returning from canvas:", isReturningFromCanvas);
     if (isReturningFromCanvas) {
       // Clear the flag
       sessionStorage.removeItem('returningFromCanvas');
@@ -211,7 +206,6 @@ export default function Dashboard() {
       
       // Instead of manually updating rooms state, we use the refreshTrigger
       // to fetch fresh data from the server
-      console.log("Triggering room refresh after creation");
       setRefreshTrigger(prev => prev + 1);
       
       toast({
@@ -238,7 +232,6 @@ export default function Dashboard() {
       console.log(`Successfully left room ${id}`);
       
       // Refresh the rooms list with latest data from server
-      console.log("Triggering room refresh after leaving room");
       setRefreshTrigger(prev => prev + 1);
 
       toast({
@@ -288,7 +281,6 @@ export default function Dashboard() {
       // Establish WebSocket connection for the room
       try {
         await createSocketConnection(id);
-        console.log("WebSocket connection established for room", id);
       } catch (err) {
         console.warn("WebSocket connection could not be established. Will try again when entering the room.", err);
         // Continue even if the WebSocket connection fails, as RoomCanvas will try again
