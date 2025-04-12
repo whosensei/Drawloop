@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button"
 import DrawingToolbar from "@/components/drawing-toolbar"
 import { Game } from "@/app/draw/Game";
 import DrawingToolbarProps from "./pill-toolbar";
+import BacktoDashboard from "./backtodashboard";
 
 // import { WebSocket } from "ws";
 
 // export type Tool = "pen"|"line" | "circle" | "rectangle" | "eraser" | null;
-export type Tool = "lock" | "rectangle" | "triangle" | "circle" | "arrow" | "line" | "pen"| null
+export type Tool = "lock" | "rectangle" | "triangle" | "circle" | "arrow" | "line" | "pen" | null
 
 export type StrokeThickness = "1" | "3" | "6"
 
@@ -24,7 +25,7 @@ export function Canvas({ roomId, socket }:
     const [selectedTool, setSelectedTool] = useState<Tool>(null)
     const [selectedColor, setSelectedColor] = useState("#000000")
     const [selectedbgColor, setSelectedbgColor] = useState("#FFFFFF")
-    const [clear,setclear] = useState<true | false>(false)
+    const [clear, setclear] = useState<true | false>(false)
     const [thickness, setThickness] = useState<StrokeThickness>("1")
     const [game, setGame] = useState<Game>();
 
@@ -61,7 +62,7 @@ export function Canvas({ roomId, socket }:
     }, [clear, game]);
 
     useEffect(() => {
-        
+
         if (Canvasref.current) {
             const g = new Game(Canvasref.current, roomId, socket);
             setGame(g);
@@ -79,11 +80,14 @@ export function Canvas({ roomId, socket }:
             overflow: "hidden"
         }}>
             <canvas ref={Canvasref} width={window.innerWidth} height={window.innerHeight}></canvas>
+
+            <div className="absolute top-1/40 right-10">
+                <BacktoDashboard />
+            </div>
             <div className="absolute top-1/64 left-1/2 -translate-x-1/2">
                 <div className="w-full max-w-3xl">
                     <DrawingToolbarProps selectedTool={selectedTool} setSelectedTool={setSelectedTool} selectedColor={selectedColor} setSelectedColor={setSelectedColor} clear={clear} setclear={setclear} roomId={roomId}
-                    selectedbgColor= {selectedbgColor} setSelectedbgColor={setSelectedbgColor} thickness={thickness} setThickness={handleThicknessChange} saveAsImage={saveAsImage} />
-                    {/* <NeumorphicPillToolbar /> */}
+                        selectedbgColor={selectedbgColor} setSelectedbgColor={setSelectedbgColor} thickness={thickness} setThickness={handleThicknessChange} saveAsImage={saveAsImage} />
                 </div>
             </div>
         </div>
