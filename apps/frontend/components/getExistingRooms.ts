@@ -4,18 +4,31 @@ import axios from "axios"
 export async function GetexistingRooms(){
     try{
         const tok = localStorage.getItem("token");
-        if(!tok) return []
-        const Roomsdata =await axios.get(`${process.env.NEXT_PUBLIC_HTTP_BACKEND}/rooms`,{
+        if(!tok) {
+            console.warn("No token found when fetching rooms");
+            return [];
+        }
+        
+        console.log("Fetching rooms from backend...");
+        const Roomsdata = await axios.get(`${process.env.NEXT_PUBLIC_HTTP_BACKEND}/rooms`,{
             headers:{
                 'authorization' : tok
             }
-        })
-        return Roomsdata.data.rooms 
-    }catch(error){
-        console.error("error fetching data",error)
-        return []
+        });
+        
+        console.log("Rooms data received:", Roomsdata.data);
+        
+        if (!Roomsdata.data.rooms || !Array.isArray(Roomsdata.data.rooms)) {
+            console.error("Invalid rooms data format:", Roomsdata.data);
+            return [];
+        }
+        
+        return Roomsdata.data.rooms;
+    } catch(error) {
+        console.error("Error fetching room data:", error);
+        return [];
     }
-  }
+}
 
 export async function Createroom(newRoomName:string) {
     try{

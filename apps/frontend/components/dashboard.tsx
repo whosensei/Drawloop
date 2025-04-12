@@ -145,12 +145,16 @@ export default function Dashboard() {
   const [newRoomName, setNewRoomName] = useState("")
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
+  const [refreshTrigger, setRefreshTrigger] = useState(() => Date.now())
   const { toast } = useToast()
 
   useEffect(() => {
+    console.log("refreshTrigger changed to:", refreshTrigger);
     async function loadRooms() {
       try {
+        console.log("Starting to load rooms from API...");
         const initialRooms: Room[] = await GetexistingRooms();
+        console.log("Loaded rooms from API:", initialRooms);
         const colors = ["indigo", "violet", "rose", "amber", "cyan"]
         const uiroom = initialRooms.map((room: Room,index:number) => ({
           id: room.id,
@@ -159,14 +163,28 @@ export default function Dashboard() {
           members: room.members || 0,
           color: colors[index % colors.length]
         }));
+        console.log("Transformed rooms for UI:", uiroom);
         setRooms(uiroom);
       }
       catch (e) {
-        console.error("failed to fetch rooms", e)
+        console.error("Failed to fetch rooms:", e)
       }
     }
     loadRooms()
-  }, [])
+  }, [refreshTrigger])
+
+  // Check if we're returning from a canvas page
+  useEffect(() => {
+    // When component mounts, check if returning from canvas
+    const isReturningFromCanvas = sessionStorage.getItem('returningFromCanvas');
+    console.log("Is returning from canvas:", isReturningFromCanvas);
+    if (isReturningFromCanvas) {
+      // Clear the flag
+      sessionStorage.removeItem('returningFromCanvas');
+      // Refresh rooms
+      setRefreshTrigger(prev => prev + 1);
+    }
+  }, []);
 
   const handleCreateRoom = async () => {
     try {
@@ -184,69 +202,49 @@ export default function Dashboard() {
         const roomColor = colors[colorIndex];
         const roomdata = await Createroom(newRoomName)
 
-        if (!roomdata || !roomdata.id) {
+      if (!roomdata || !roomdata.id) {
         throw new Error("Invalid response from server");
-        }
+      }
 
-        const newRoom: UIRoom = {
-
-          id: roomdata.id,
-          name: roomdata.name,
-          createdAt: roomdata.createdAt || new Date().toISOString(),
-          members: 0,
-          color: roomColor
-        }
-        setRooms([...rooms, newRoom])
-        setNewRoomName("")
-        setIsCreateDialogOpen(false)
-        toast({
-          variant: "success",
-          title: "Room Created",
-          description: `"${roomdata.name}" has been created successfully.`,
-        })
+      setNewRoomName("");
+      setIsCreateDialogOpen(false);
+      
+      // Instead of manually updating rooms state, we use the refreshTrigger
+      // to fetch fresh data from the server
+      console.log("Triggering room refresh after creation");
+      setRefreshTrigger(prev => prev + 1);
+      
+      toast({
+        variant: "success",
+        title: "Room Created",
+        description: `"${roomdata.name}" has been created successfully.`,
+      });
     } catch (e) {
-      console.error(e)
+      console.error("Failed to create room:", e);
       toast({
         variant: "error", 
         title: "Failed to create room",
         description: "Please try again later."
-      })
+      });
     }
   }
 
   const handleDeleteRoom = async (id: number, name: string) => {
     try {
-      // Visually remove the room from UI first for better UX
-      const roomToDelete = rooms.find((room) => room.id === id);
-      setRooms(rooms.filter((room) => room.id !== id));
+      console.log(`Attempting to leave room ${id} (${name})`);
       
       // Call the backend to delete the room for the current user
       await LeaveRoom(id);
+      console.log(`Successfully left room ${id}`);
+      
+      // Refresh the rooms list with latest data from server
+      console.log("Triggering room refresh after leaving room");
+      setRefreshTrigger(prev => prev + 1);
 
       toast({
         variant: "info",
         title: "Room Removed",
         description: `You have left "${name}".`,
-        action: (
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 border-white/10 bg-white/5 hover:bg-white/10"
-            onClick={() => {
-              if (roomToDelete) {
-                setRooms((prev) => [...prev, roomToDelete]);
-                //implement join-room 
-                toast({
-                  variant: "success",
-                  title: "Room Rejoined",
-                  description: `You have rejoined "${name}".`,
-                });
-              }
-            }}
-          >
-            Undo
-          </Button>
-        ),
       });
     } catch (error) {
       console.error("Failed to leave room:", error);
@@ -255,12 +253,6 @@ export default function Dashboard() {
         title: "Error",
         description: "Failed to leave the room. Please try again."
       });
-      
-      // If there was an error, add the room back to the UI
-      const roomToDelete = rooms.find((room) => room.id === id);
-      if (roomToDelete) {
-        setRooms((prev) => [...prev, roomToDelete]);
-      }
     }
   }
 
@@ -407,7 +399,7 @@ export default function Dashboard() {
                   <Button
                     variant="outline"
                     onClick={() => setIsCreateDialogOpen(false)}
-                    className="border-white/10 bg-white/5 hover:bg-white/10"
+                    className="border-white/10 bg-white/5 text-white hover:bg-white/10 hover:text-white"
                   >
                     Cancel
                   </Button>

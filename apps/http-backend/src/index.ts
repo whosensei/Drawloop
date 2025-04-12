@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 import { db } from "@repo/db";
 import { User, Room, chats, userRooms } from "@repo/db/schema";
 import middleware from "./middleware";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, inArray } from "drizzle-orm";
 const app = express();
 import cors from "cors"
 import { log } from "console";
@@ -183,13 +183,7 @@ app.get("/rooms", middleware, async(req: Request, res: Response) => {
     // Get the full room details
     const rooms = await db.select()
       .from(Room)
-      .where(
-        // Check if room.id is in the array of roomIds
-        // This is a simplification - you might need a different approach 
-        // depending on your SQL dialect
-        // Using "in" operator would be better, but for simplicity we'll use this
-        roomIds.map(id => eq(Room.id, id)).reduce((prev, curr) => prev || curr)
-      );
+      .where(inArray(Room.id, roomIds));
     
     res.status(200).json({
       rooms
