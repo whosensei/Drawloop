@@ -7,6 +7,7 @@ import DrawingToolbar from "@/components/drawing-toolbar"
 import { Game } from "@/app/draw/Game";
 import DrawingToolbarProps from "./pill-toolbar";
 import BacktoDashboard from "./backtodashboard";
+import { ThemeToggle } from "./theme-toggle";
 
 // import { WebSocket } from "ws";
 
@@ -23,8 +24,8 @@ export function Canvas({ roomId, socket }:
 
 
     const [selectedTool, setSelectedTool] = useState<Tool>(null)
-    const [selectedColor, setSelectedColor] = useState("#000000")
-    const [selectedbgColor, setSelectedbgColor] = useState("#FFFFFF")
+    const [selectedColor, setSelectedColor] = useState("#FFFFFF")
+    const [selectedbgColor, setSelectedbgColor] = useState("#121212")
     const [clear, setclear] = useState<true | false>(false)
     const [thickness, setThickness] = useState<StrokeThickness>("1")
     const [game, setGame] = useState<Game>();
@@ -81,8 +82,11 @@ export function Canvas({ roomId, socket }:
         }}>
             <canvas ref={Canvasref} width={window.innerWidth} height={window.innerHeight}></canvas>
 
-            <div className="absolute top-1/40 right-10">
+            <div className="absolute top-1/40 right-7">
                 <BacktoDashboard />
+            </div>
+            <div className="absolute top-1/40 right-20">
+                <ThemeToggle />
             </div>
             <div className="absolute top-1/64 left-1/2 -translate-x-1/2">
                 <div className="w-full max-w-3xl">
