@@ -4,10 +4,10 @@ import { getExistingShapes } from "./http";
 type shapes = {
     type: "rect",
     StartX: number,
-    StartY: number
+    StartY: number,
     width: number,
     height: number,
-    color: string
+    color: string,
     thickness: number,
     id?: string
 } |
@@ -25,7 +25,27 @@ type shapes = {
     StartX: number,
     StartY: number,
     width: number,
-    height: number
+    height: number,
+    color: string,
+    thickness: number,
+    id?: string
+} |
+{
+    type: "triangle",
+    StartX: number,
+    StartY: number,
+    width: number,
+    height: number,
+    color: string,
+    thickness: number,
+    id?: string
+} |
+{
+    type: "arrow",
+    StartX: number,
+    StartY: number,
+    width: number,
+    height: number,
     color: string,
     thickness: number,
     id?: string
@@ -40,16 +60,7 @@ type shapes = {
 {
     type: "eraser",
     targetIds: string[],
-} |
-{
-    type: "text",
-    x: number,
-    y: number,
-    content: string,
-    color: string,
-    fontSize: number,
-    id?: string
-}
+} 
 
 export class Game {
 
@@ -170,6 +181,41 @@ export class Game {
                 this.ctx.moveTo(shape.StartX, shape.StartY);
                 this.ctx.lineTo(shape.StartX + shape.width, shape.StartY + shape.height);
                 this.ctx.stroke();
+            } else if (shape.type === "triangle") {
+                this.ctx.beginPath();
+                this.ctx.strokeStyle = shape.color;
+                this.ctx.lineWidth = Number(shape.thickness);
+                
+                // Draw from the starting point (fixed position)
+                this.ctx.moveTo(shape.StartX, shape.StartY);
+                this.ctx.lineTo(shape.StartX + shape.width, shape.StartY);
+                this.ctx.lineTo(shape.StartX + shape.width/2, shape.StartY + shape.height);
+                this.ctx.closePath();
+                this.ctx.stroke();
+            } else if (shape.type === "arrow") {
+                const headLength = Math.min(Math.abs(shape.width), Math.abs(shape.height)) / 4;
+                const angle = Math.atan2(shape.height, shape.width);
+                
+                this.ctx.beginPath();
+                this.ctx.strokeStyle = shape.color;
+                this.ctx.lineWidth = Number(shape.thickness);
+                
+                // Draw the line
+                this.ctx.moveTo(shape.StartX, shape.StartY);
+                this.ctx.lineTo(shape.StartX + shape.width, shape.StartY + shape.height);
+                
+                // Draw the arrowhead
+                this.ctx.lineTo(
+                    shape.StartX + shape.width - headLength * Math.cos(angle - Math.PI / 6),
+                    shape.StartY + shape.height - headLength * Math.sin(angle - Math.PI / 6)
+                );
+                this.ctx.moveTo(shape.StartX + shape.width, shape.StartY + shape.height);
+                this.ctx.lineTo(
+                    shape.StartX + shape.width - headLength * Math.cos(angle + Math.PI / 6),
+                    shape.StartY + shape.height - headLength * Math.sin(angle + Math.PI / 6)
+                );
+                
+                this.ctx.stroke();
             } else if (shape.type === "pen") {
                 this.ctx.beginPath();
                 this.ctx.strokeStyle = shape.color;
@@ -178,11 +224,8 @@ export class Game {
                 if (first) this.ctx.moveTo(first.x, first.y);
                 rest.forEach(pt => this.ctx.lineTo(pt.x, pt.y));
                 this.ctx.stroke();
-            } else if (shape.type === "text") {
-                this.ctx.fillStyle = shape.color;
-                this.ctx.font = `${shape.fontSize}px Arial`;
-                this.ctx.fillText(shape.content, shape.x, shape.y);
-            }
+            } 
+            
             // No need to render eraser shapes - they only represent deletions
         });
     }
@@ -237,6 +280,28 @@ export class Game {
         } else if (this.selectedTool === "line") {
             shape = {
                 type: "line",
+                StartX: this.startX,
+                StartY: this.startY,
+                width: e.clientX - this.startX,
+                height: e.clientY - this.startY,
+                color: this.selectedColor,
+                thickness: Number(this.thickness),
+                id: shapeId
+            };
+        } else if (this.selectedTool === "triangle") {
+            shape = {
+                type: "triangle",
+                StartX: this.startX,
+                StartY: this.startY,
+                width: e.clientX - this.startX,
+                height: e.clientY - this.startY,
+                color: this.selectedColor,
+                thickness: Number(this.thickness),
+                id: shapeId
+            };
+        } else if (this.selectedTool === "arrow") {
+            shape = {
+                type: "arrow",
                 StartX: this.startX,
                 StartY: this.startY,
                 width: e.clientX - this.startX,
@@ -323,6 +388,20 @@ export class Game {
                     const distance = Math.sqrt(dx * dx + dy * dy);
 
                     return distance <= eraserRadius + shape.thickness / 2;
+                } else if (shape.type === "triangle" || shape.type === "arrow") {
+                    // Expand hitbox for better detection
+                    const expandedX = shape.StartX - eraserRadius;
+                    const expandedY = shape.StartY - eraserRadius;
+                    const expandedWidth = shape.width + eraserRadius * 2;
+                    const expandedHeight = shape.height + eraserRadius * 2;
+
+                    // Simple bounding box detection for triangle and arrow
+                    return (
+                        eraserX >= expandedX &&
+                        eraserX <= expandedX + expandedWidth &&
+                        eraserY >= expandedY &&
+                        eraserY <= expandedY + expandedHeight
+                    );
                 } else if (shape.type === "pen") {
                     // Check if eraser is close to any point in the pen path
                     return shape.points.some(point => {
@@ -331,18 +410,7 @@ export class Game {
                         const distance = Math.sqrt(dx * dx + dy * dy);
                         return distance <= eraserRadius + shape.thickness / 2;
                     });
-                } else if (shape.type === "text") {
-                    // Simple rectangular hit detection for text
-                    const textWidth = shape.content.length * shape.fontSize * 0.6; // Approximate text width
-                    const textHeight = shape.fontSize;
-
-                    return (
-                        eraserX >= shape.x - eraserRadius &&
-                        eraserX <= shape.x + textWidth + eraserRadius &&
-                        eraserY >= shape.y - textHeight - eraserRadius &&
-                        eraserY <= shape.y + eraserRadius
-                    );
-                }
+                } 
 
                 return false;
             });
@@ -417,6 +485,41 @@ export class Game {
                     this.ctx.lineWidth = Number(this.thickness);
                     this.ctx.moveTo(this.startX, this.startY);
                     this.ctx.lineTo(e.clientX, e.clientY);
+                    this.ctx.stroke();
+                    break;
+                case "triangle":
+                    this.ctx.beginPath();
+                    this.ctx.lineWidth = Number(this.thickness);
+                    
+                    // Draw from the starting point (fixed position)
+                    this.ctx.moveTo(this.startX, this.startY);
+                    this.ctx.lineTo(this.startX + width, this.startY);
+                    this.ctx.lineTo(this.startX + width/2, this.startY + height);
+                    this.ctx.closePath();
+                    this.ctx.stroke();
+                    break;
+                case "arrow":
+                    const headLength = Math.min(Math.abs(width), Math.abs(height)) / 4;
+                    const angle = Math.atan2(height, width);
+                    
+                    this.ctx.beginPath();
+                    this.ctx.lineWidth = Number(this.thickness);
+                    
+                    // Draw the line
+                    this.ctx.moveTo(this.startX, this.startY);
+                    this.ctx.lineTo(e.clientX, e.clientY);
+                    
+                    // Draw the arrowhead
+                    this.ctx.lineTo(
+                        e.clientX - headLength * Math.cos(angle - Math.PI / 6),
+                        e.clientY - headLength * Math.sin(angle - Math.PI / 6)
+                    );
+                    this.ctx.moveTo(e.clientX, e.clientY);
+                    this.ctx.lineTo(
+                        e.clientX - headLength * Math.cos(angle + Math.PI / 6),
+                        e.clientY - headLength * Math.sin(angle + Math.PI / 6)
+                    );
+                    
                     this.ctx.stroke();
                     break;
                 case "pen":

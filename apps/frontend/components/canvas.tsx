@@ -11,7 +11,7 @@ import BacktoDashboard from "./backtodashboard";
 // import { WebSocket } from "ws";
 
 // export type Tool = "pen"|"line" | "circle" | "rectangle" | "eraser" | null;
-export type Tool = "lock" | "rectangle" | "triangle" | "circle" | "arrow" | "line" | "pen" | null
+export type Tool = "lock" | "rectangle" | "triangle" | "circle" | "arrow" | "line" | "pen" |"eraser"| null
 
 export type StrokeThickness = "1" | "3" | "6"
 

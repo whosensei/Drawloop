@@ -28,7 +28,7 @@ export async function GetexistingRooms(){
         console.error("Error fetching room data:", error);
         return [];
     }
-}
+  }
 
 export async function Createroom(newRoomName:string) {
     try{
