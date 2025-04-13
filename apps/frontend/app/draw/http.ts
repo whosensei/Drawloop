@@ -15,16 +15,13 @@ export async function getExistingShapes(roomId: string) {
 // Function to delete shapes from the backend
 export async function deleteShapes(roomId: string, shapeIds: string[]) {
     if (!shapeIds || shapeIds.length === 0) {
-        console.log("No shape IDs provided for deletion.");
         return; // Nothing to delete
     }
     try {
-        const res = await axios.delete(`${process.env.NEXT_PUBLIC_HTTP_BACKEND!}/shapes`, {
+        await axios.delete(`${process.env.NEXT_PUBLIC_HTTP_BACKEND!}/shapes`, {
             data: { roomId, shapeIds }, // Send data in the body for DELETE request
             // No auth headers needed as middleware was removed
         });
-        console.log("Shapes deleted successfully:", res.data);
-        return res.data;
     } catch (error) {
         console.error("Failed to delete shapes:", error);
         // Don't throw the error to prevent UI disruption during drawing

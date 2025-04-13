@@ -324,11 +324,8 @@ app.delete("/shapes", async (req: Request, res: Response) => {
        return;
     }
 
-    console.log(`Processing delete request for roomId: ${parsedRoomId}, shapeIds:`, shapeIds);
-
     // 1. Fetch all chat entries for the room
     const roomChats = await db.select().from(chats).where(eq(chats.roomId, parsedRoomId));
-    console.log(`Found ${roomChats.length} total chat entries for room ${parsedRoomId}`);
 
     // 2. Identify chat IDs containing the shapes to delete
     const chatIdsToDelete: number[] = [];
@@ -337,29 +334,25 @@ app.delete("/shapes", async (req: Request, res: Response) => {
         const messageContent = JSON.parse(chat.message);
         // Check if the message structure is as expected and contains a shape with an ID
         if (messageContent && messageContent.shape && messageContent.shape.id && shapeIds.includes(messageContent.shape.id)) {
-           if(chat.id) { // Ensure chat.id is not null/undefined
+           if(chat.id) { 
              chatIdsToDelete.push(chat.id);
            }
         }
       } catch (parseError) {
-        // Log parsing errors but continue, as some messages might not be shapes
-        console.warn(`Could not parse chat message ID ${chat.id} in room ${parsedRoomId}:`, parseError);
+        // Skip messages that can't be parsed
       }
     });
 
     // 3. Delete the identified chat entries
     if (chatIdsToDelete.length > 0) {
-      console.log(`Attempting to delete ${chatIdsToDelete.length} chat entries for shapes:`, shapeIds);
       try {
-        const deleteResult = await db.delete(chats).where(inArray(chats.id, chatIdsToDelete));
-        console.log("Deletion result:", deleteResult);
+        await db.delete(chats).where(inArray(chats.id, chatIdsToDelete));
         res.status(200).json({ message: `Successfully deleted ${chatIdsToDelete.length} shape(s).` });
       } catch (deleteError) {
         console.error("Error during delete operation:", deleteError);
         res.status(500).json({ message: "Database error while deleting shapes." });
       }
     } else {
-      console.log("No matching chat entries found to delete for shape IDs:", shapeIds);
       res.status(404).json({ message: "No shapes found matching the provided IDs in this room." });
     }
 

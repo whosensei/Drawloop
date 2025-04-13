@@ -134,7 +134,6 @@ export class Game {
             }
             return shape;
         }).filter(shape => shape.type !== 'eraser');
-        console.log("Initialized shapes:", this.existingShapes);
         this.clearCanvas();
     }
 
@@ -148,16 +147,13 @@ export class Game {
                 const msg = JSON.parse(event.data);
                 if (msg.type === "chat") {
                     const shapedata = JSON.parse(msg.message);
-                    console.log("Received shape data:", shapedata);
 
                     if (shapedata.shape.type === "eraser") {
                         const targetIds = shapedata.shape.targetIds;
                         if (Array.isArray(targetIds)) {
-                            const initialLength = this.existingShapes.length;
                             this.existingShapes = this.existingShapes.filter(shape => 
                                 shape.type === 'eraser' || !targetIds.includes(shape.id)
                             );
-                            console.log(`Eraser message processed, removed ${initialLength - this.existingShapes.length} shapes locally.`);
                             this.clearCanvas();
                         } else {
                             console.warn("Received eraser message with invalid targetIds:", targetIds);
@@ -165,21 +161,15 @@ export class Game {
                     } else if (shapedata.shape.type) {
                         if (!shapedata.shape.id) {
                             shapedata.shape.id = this.generateUniqueId();
-                            console.log(`Generated ID for incoming shape: ${shapedata.shape.id}`);
                         }
                         
                         if (!this.existingShapes.some(s => s.type !== 'eraser' && s.id === shapedata.shape.id)) {
                             this.existingShapes.push(shapedata.shape);
-                            console.log(`Added shape with ID: ${shapedata.shape.id}`);
                             this.clearCanvas();
-                        } else {
-                             console.log(`Duplicate shape ignored: ${shapedata.shape.id}`);
                         }
-
                     } else {
                         console.warn("Received message with unknown shape type:", shapedata);
                     }
-
                 }
             } catch (error) {
                 console.error("Failed to process WebSocket message:", error, "Data:", event.data);
@@ -307,10 +297,7 @@ export class Game {
                     roomId: this.roomId
                 });
                 this.socket.send(socketData);
-                console.log("Sent eraser message for IDs:", shape.targetIds);
-                
                 deleteShapes(this.roomId, idsToErase);
-
                 this.shapesToErase.clear();
             }
             this.clearCanvas();
@@ -327,64 +314,64 @@ export class Game {
 
         switch (this.selectedTool) {
             case "rectangle":
-                shape = {
-                    type: "rect",
-                    StartX: this.startX,
-                    StartY: this.startY,
-                    width: currentX - this.startX,
-                    height: currentY - this.startY,
-                    color: this.selectedColor,
-                    thickness: Number(this.thickness),
-                    id: shapeId
-                };
+            shape = {
+                type: "rect",
+                StartX: this.startX,
+                StartY: this.startY,
+                width: currentX - this.startX,
+                height: currentY - this.startY,
+                color: this.selectedColor,
+                thickness: Number(this.thickness),
+                id: shapeId
+            };
                 break;
             case "circle":
-                shape = {
-                    type: "circle",
+            shape = {
+                type: "circle",
                     StartX: this.startX + (currentX - this.startX) / 2,
                     StartY: this.startY + (currentY - this.startY) / 2,
                     radius: distance / 2,
-                    color: this.selectedColor,
-                    thickness: Number(this.thickness),
-                    id: shapeId
-                };
+                color: this.selectedColor,
+                thickness: Number(this.thickness),
+                id: shapeId
+            };
                 if (shape.radius < 0) shape.radius = 0;
                 break;
             case "line":
-                shape = {
-                    type: "line",
-                    StartX: this.startX,
-                    StartY: this.startY,
-                    width: currentX - this.startX,
-                    height: currentY - this.startY,
-                    color: this.selectedColor,
-                    thickness: Number(this.thickness),
-                    id: shapeId
-                };
+            shape = {
+                type: "line",
+                StartX: this.startX,
+                StartY: this.startY,
+                width: currentX - this.startX,
+                height: currentY - this.startY,
+                color: this.selectedColor,
+                thickness: Number(this.thickness),
+                id: shapeId
+            };
                 break;
             case "triangle":
-                shape = {
-                    type: "triangle",
-                    StartX: this.startX,
-                    StartY: this.startY,
-                    width: currentX - this.startX,
-                    height: currentY - this.startY,
-                    color: this.selectedColor,
-                    thickness: Number(this.thickness),
-                    id: shapeId
-                };
+            shape = {
+                type: "triangle",
+                StartX: this.startX,
+                StartY: this.startY,
+                width: currentX - this.startX,
+                height: currentY - this.startY,
+                color: this.selectedColor,
+                thickness: Number(this.thickness),
+                id: shapeId
+            };
                 break;
             case "arrow":
-                shape = {
-                    type: "arrow",
-                    StartX: this.startX,
-                    StartY: this.startY,
-                    width: currentX - this.startX,
-                    height: currentY - this.startY,
-                    color: this.selectedColor,
-                    thickness: Number(this.thickness),
-                    id: shapeId
-                };
+            shape = {
+                type: "arrow",
+                StartX: this.startX,
+                StartY: this.startY,
+                width: currentX - this.startX,
+                height: currentY - this.startY,
+                color: this.selectedColor,
+                thickness: Number(this.thickness),
+                id: shapeId
+            };
                 break;
             case "pen":
                 if (distance > 0) {
@@ -394,13 +381,13 @@ export class Game {
                     this.clearCanvas();
                     return;
                 }
-                shape = {
-                    type: "pen",
-                    points: [...this.currentPenPoints],
-                    color: this.selectedColor,
-                    thickness: Number(this.thickness),
-                    id: shapeId
-                };
+            shape = {
+                type: "pen",
+                points: [...this.currentPenPoints],
+                color: this.selectedColor,
+                thickness: Number(this.thickness),
+                id: shapeId
+            };
                 this.currentPenPoints = [];
                 break;
         }
@@ -418,7 +405,6 @@ export class Game {
         });
 
         this.socket.send(socketData);
-        console.log(`Sent shape: ${shape.type}, ID: ${shape.id}`);
     }
 
     mouseMoveHandler = (e: MouseEvent | TouchEvent) => {
@@ -443,40 +429,40 @@ export class Game {
         const height: number = currentY - this.startY;
         const radius: number = Math.sqrt(width ** 2 + height ** 2) / 2;
         
-        this.clearCanvas();
-        this.ctx.strokeStyle = this.selectedColor;
+            this.clearCanvas();
+            this.ctx.strokeStyle = this.selectedColor;
         this.ctx.lineWidth = Number(this.thickness);
 
-        switch (this.selectedTool) {
-            case "rectangle":
-                this.ctx.strokeRect(this.startX, this.startY, width, height);
-                break;
-            case "circle":
-                this.ctx.beginPath();
+            switch (this.selectedTool) {
+                case "rectangle":
+                    this.ctx.strokeRect(this.startX, this.startY, width, height);
+                    break;
+                case "circle":
+                    this.ctx.beginPath();
                 this.ctx.arc(this.startX + width / 2, this.startY + height / 2, radius, 0, 2 * Math.PI);
-                this.ctx.stroke();
-                break;
-            case "line":
-                this.ctx.beginPath();
-                this.ctx.moveTo(this.startX, this.startY);
+                    this.ctx.stroke();
+                    break;
+                case "line":
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(this.startX, this.startY);
                 this.ctx.lineTo(currentX, currentY);
-                this.ctx.stroke();
-                break;
-            case "triangle":
-                this.ctx.beginPath();
-                this.ctx.moveTo(this.startX, this.startY);
+                    this.ctx.stroke();
+                    break;
+                case "triangle":
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(this.startX, this.startY);
                 this.ctx.lineTo(this.startX + width, this.startY + height);
                 this.ctx.lineTo(this.startX - width, this.startY + height);
-                this.ctx.closePath();
-                this.ctx.stroke();
-                break;
-            case "arrow":
+                    this.ctx.closePath();
+                    this.ctx.stroke();
+                    break;
+                case "arrow":
                 this.drawArrow(this.startX, this.startY, currentX, currentY, this.selectedColor, Number(this.thickness));
-                break;
-            case "pen":
+                    break;
+                case "pen":
                 this.currentPenPoints.push({ x: currentX, y: currentY });
                 this.drawPenStroke(this.currentPenPoints, this.selectedColor, Number(this.thickness));
-                break;
+                    break;
         }
         
         this.lastX = currentX;
@@ -583,7 +569,7 @@ export class Game {
     
     mouseLeaveHandler = () => {
          if (this.drawing) {
-            this.mouseUpHandler(new MouseEvent('mouseup', {
+                this.mouseUpHandler(new MouseEvent('mouseup', {
                 clientX: this.lastX + this.canvas.getBoundingClientRect().left,
                 clientY: this.lastY + this.canvas.getBoundingClientRect().top
             }));
@@ -596,7 +582,7 @@ export class Game {
             .map(shape => shape.id);
 
         if (allShapeIds.length > 0) {
-             const shape: shapes = {
+            const shape: shapes = {
                 type: "eraser",
                 targetIds: allShapeIds
             };
@@ -607,13 +593,9 @@ export class Game {
                 roomId: this.roomId
             });
             this.socket.send(socketData);
-            console.log("Sent clearAll (eraser) message for IDs:", shape.targetIds);
-
             deleteShapes(this.roomId, allShapeIds);
-            
         } else {
-             console.log("ClearAll called, but no shapes to clear.");
-             this.clearCanvas();
+            this.clearCanvas();
         }
     }
 
@@ -647,7 +629,6 @@ export class Game {
 
             if (intersects) {
                 this.shapesToErase.add(shape.id);
-                console.log(`Marked shape ${shape.id} (${shape.type}) for erasure.`);
             }
         });
     }

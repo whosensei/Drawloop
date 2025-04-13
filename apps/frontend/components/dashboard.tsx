@@ -350,7 +350,7 @@ export default function Dashboard() {
         {/* <TestCredentials /> */}
 
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-          <h2 className="text-3xl font-bold">Your Rooms</h2>
+          <h2 className="text-3xl font-bold font-poppins tracking-tight">Your Rooms</h2>
 
           <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
             <div className="relative flex-1 sm:max-w-xs">
