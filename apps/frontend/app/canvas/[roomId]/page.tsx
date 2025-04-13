@@ -2,14 +2,14 @@ import { initDraw } from "@/app/draw";
 import RoomCanvas from "@/components/RoomCanvas";
 import { useEffect, useRef } from "react";
 
-export default async function CanvasPage({params} : {
-    params:{
-        roomId :string
-    }
-}){
+type PageProps = {
+  params: {
+    roomId: string
+  }
+}
 
-    const roomId = (await params).roomId
+export default async function CanvasPage({ params }: PageProps) {
+  const roomId = (await params).roomId;
 
-    return <RoomCanvas roomId = {roomId} />
-   
+  return <RoomCanvas roomId={roomId} />
 }
