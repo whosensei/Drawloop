@@ -1,16 +1,27 @@
 "use client"
-
-import { useEffect, useState } from "react"
+import { useStyleRegistry } from "styled-jsx"
+import { toast } from "./ui/use-toast"
+import { use, useEffect, useState } from "react"
 
 // Original JoinRoom hook for use in components that need the socket
+
 export default function JoinRoom(roomId: string) {
     const [socket, setSocket] = useState<WebSocket | null>(null);
+    // const[shareRoom,setShareRoom] = useState(false)
+    // const [url,setUrl] = useState("")
 
     useEffect(() => {
         const token = localStorage.getItem("token");
         if (!token) {
-            console.error("Authentication token not found");
-            return;
+            toast({
+                variant:"error",
+                title:"User not signed in",
+                description:"Redirecting to Sign-in"
+            })
+            const current_url = window.location.href;
+            // setUrl(current_url);
+            window.location.href = `/signin?redirectUrl=${encodeURIComponent(current_url)}`;
+        
         }
 
         try {

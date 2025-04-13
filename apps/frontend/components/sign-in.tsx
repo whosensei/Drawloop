@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import Link from "next/link"
 import Image from "next/image"
@@ -53,7 +53,24 @@ export default function SignIn() {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [isLoading, setIsLoading] = useState(false)
+    const [redirectUrl, setRedirectUrl] = useState("")
+    // const [shareRoom, setShareRoom] = useState(false)
     const { toast } = useToast()
+
+    // Read URL parameters on component mount
+    useEffect(() => {
+        const queryParams = new URLSearchParams(window.location.search);
+        const redirectParam = queryParams.get('redirectUrl');
+        // const shareRoomParam = queryParams.get('shareRoom');
+        
+        if (redirectParam) {
+            setRedirectUrl(redirectParam);
+        }
+        
+        // if (shareRoomParam === 'true') {
+        //     setShareRoom(true);
+        // }
+    }, []);
 
     // Add this function to handle using test credentials
     const handleUseTestAccount = () => {
@@ -112,7 +129,8 @@ export default function SignIn() {
             } finally {
                 setIsLoading(false)
             }
-        window.location.href = "/dashboard"
+        // Redirect to the original URL if available, otherwise to dashboard
+        window.location.href = redirectUrl || "/dashboard"
             },1000)
     }
 
