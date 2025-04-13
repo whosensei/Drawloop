@@ -1,21 +1,37 @@
 "use client"
-
-import { useState } from "react"
-import { Circle, Square, Minus, Eraser, Trash2, Check, PenTool, Save, Undo, Redo, Palette } from "lucide-react"
+import { useState,useEffect } from "react"
+import {
+  Lock,
+  Square,
+  Triangle,
+  Circle,
+  ArrowRight,
+  Minus,
+  Pen,
+  Share,
+  Trash2,
+  Save,
+  Eraser,
+  Copy,
+  Link,
+  Play,
+  LockIcon,
+} from "lucide-react"
 import { cn } from "@/lib/utils"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Separator } from "@/components/ui/separator"
+import { useTheme } from "@/components/theme-toggle"
+import React from "react"
 import { clearAll } from "@/components/ui/clearAll"
 import { toast } from "./ui/use-toast"
 
-type Tool = "pen" | "line" | "circle" | "rectangle" | "eraser" | null
 
-type StrokeThickness = "1" | "3" | "6"
-
-interface ColorOption {
-  name: string
-  value: string
-}
+export type Tool = "rectangle" | "triangle" | "circle" | "arrow" | "line" | "pen" | "eraser" |null
 
 interface DrawingToolbarProps {
   selectedTool: Tool
@@ -32,34 +48,7 @@ interface DrawingToolbarProps {
   saveAsImage?: () => void
 }
 
-const colorOptions: ColorOption[] = [
-  { name: "Black", value: "#000000" },
-  { name: "White", value: "#FFFFFF" },
-  { name: "Red", value: "#FF0000" },
-  { name: "Green", value: "#00FF00" },
-  { name: "Blue", value: "#0000FF" },
-  { name: "Yellow", value: "#FFFF00" },
-  { name: "Magenta", value: "#FF00FF" },
-  { name: "Cyan", value: "#00FFFF" },
-  { name: "Orange", value: "#FFA500" },
-  { name: "Purple", value: "#800080" },
-  { name: "Pink", value: "#FFC0CB" },
-  { name: "Brown", value: "#A52A2A" },
-]
-
-const backgroundOptions: ColorOption[] = [
-  { name: "Light Gray", value: "#f0f0f5" },
-  { name: "Light Blue", value: "#e8f4f8" },
-  { name: "Light Beige", value: "#f5f0e8" },
-  { name: "Light Purple", value: "#f0e8f4" },
-  { name: "Light Green", value: "#e8f0e8" },
-  { name: "Dark Gray", value: "#2d2d30" },
-  { name: "Dark Blue", value: "#1a2b3c" },
-  { name: "Dark Purple", value: "#2d1a3c" },
-  { name: "Dark Green", value: "#1a3c2d" },
-]
-
-export default function PillToolbar({
+export default function DrawingToolbar({
   selectedTool,
   setSelectedTool,
   selectedColor,
@@ -69,62 +58,89 @@ export default function PillToolbar({
   roomId,
   selectedbgColor,
   setSelectedbgColor,
-  thickness,
+  thickness = "4",
   setThickness,
   saveAsImage,
 }: DrawingToolbarProps) {
-  //   const [selectedTool, setSelectedTool] = useState<Tool>("pen")
-  //   const [selectedColor, setSelectedColor] = useState("#000000")
-  const [customStrokeColor, setCustomStrokeColor] = useState("#000000")
-  //   const [selectedbgColor, setSelectedbgColor] = useState("#FFFFFF")
-  const [customBgColor, setCustomBgColor] = useState("#FFFFFF")
-  // const [thickness, setThickness] = useState<StrokeThickness>("medium")
-  const [canUndo, setCanUndo] = useState(false)
-  const [canRedo, setCanRedo] = useState(false)
-  const [recentColors, setRecentColors] = useState<string[]>([])
+  const { theme } = useTheme()
+  const [isLocked, setIsLocked] = useState(false)
+  const [shareDialogOpen, setShareDialogOpen] = useState(false)
+  const [exportLinkDialogOpen, setExportLinkDialogOpen] = useState(false)
 
-  // Make toolbar slightly darker than background
-  const toolbarBgColor = darkenColor(selectedbgColor, 0.08)
+  const tools = [
+    { id: "rectangle" as Tool, icon: Square, label: "Rectangle" },
+    { id: "triangle" as Tool, icon: Triangle, label: "Triangle" },
+    { id: "circle" as Tool, icon: Circle, label: "Circle" },
+    { id: "arrow" as Tool, icon: ArrowRight, label: "Arrow" },
+    { id: "line" as Tool, icon: Minus, label: "Line" },
+    { id: "pen" as Tool, icon: Pen, label: "Pen" },
+    { id: "eraser" as Tool, icon: Eraser, label: "Eraser" },
+  ]
 
-  // Generate shadow colors based on toolbar background color
-  const shadowDark = darkenColor(toolbarBgColor, 0.15)
-  const shadowLight = lightenColor(toolbarBgColor, 0.15)
-  const isLight = isLightColor(toolbarBgColor)
-  const iconColor = isLight ? "#333333" : "#f0f0f0"
-  const textColor = isLight ? "#000000" : "#ffffff"
+  const colorOptions = [
+    "#ffffff", // white
+    "#000000", // black
+    "#ef4444", // red
+    "#f97316", // orange
+    "#f59e0b", // amber
+    "#84cc16", // lime
+    "#10b981", // emerald
+    "#06b6d4", // cyan
+    "#3b82f6", // blue
+    "#6366f1", // indigo
+    "#8b5cf6", // violet
+    "#d946ef", // fuchsia
+  ]
 
-  const handleToolClick = (tool: Tool) => {
-    setSelectedTool(tool)
-  }
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // Load stored color preference for stroke
+      const storedColor = localStorage.getItem('selectedColor');
+      if (storedColor && storedColor !== selectedColor) {
+        setSelectedColor(storedColor);
+      }
+      
+      // Load stored color preference for background
+      const storedBgColor = localStorage.getItem('selectedbgColor');
+      if (storedBgColor && storedBgColor !== selectedbgColor) {
+        setSelectedbgColor(storedBgColor);
+      }
+      
+      // Load stored thickness preference with default of 4
+      const storedThickness = localStorage.getItem('thickness');
+      if (storedThickness && storedThickness !== thickness) {
+        setThickness(storedThickness);
+      } else if (!storedThickness) {
+        // Set default thickness if none is stored
+        setThickness("4");
+      }
+    }
+  }, []);
 
-  const handleStrokeColorChange = (color: string) => {
-    setSelectedColor(color)
-    setCustomStrokeColor(color)
-    addToRecentColors(color)
-  }
+  // Save preferences to localStorage when they change
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('selectedColor', selectedColor);
+    }
+  }, [selectedColor]);
 
-  const handleBgColorChange = (color: string) => {
-    setSelectedbgColor(color)
-    setCustomBgColor(color)
-    addToRecentColors(color)
-  }
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('selectedbgColor', selectedbgColor);
+    }
+  }, [selectedbgColor]);
 
-  const addToRecentColors = (color: string) => {
-    setRecentColors((prev) => {
-      // Remove if already exists
-      const filtered = prev.filter((c) => c !== color)
-      // Add to beginning and limit to 5 colors
-      return [color, ...filtered].slice(0, 5)
-    })
-  }
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('thickness', thickness);
+    }
+  }, [thickness]);
 
   const handleClearAll = async () => {
     try {
       setclear(true)
       await clearAll(roomId)
       setSelectedTool(null)
-      setCanUndo(false)
-      setCanRedo(false)
       console.log("Clear all successful")
     } catch (error) {
       console.error("Failed to clear canvas:", error)
@@ -141,557 +157,463 @@ export default function PillToolbar({
     }
   }
 
-  const handleUndo = () => {
-    console.log("Undo action")
-    setCanRedo(true)
-    setCanUndo(Math.random() > 0.3)
+  const handleShareClick = () => {
+    setShareDialogOpen(true)
   }
 
-  const handleRedo = () => {
-    console.log("Redo action")
-    setCanRedo(Math.random() > 0.7)
+  const handleExportLinkClick = () => {
+    setShareDialogOpen(false)
+    setExportLinkDialogOpen(true)
   }
 
-  const handleSave = () => {
-    if (saveAsImage) {
-      saveAsImage()
-    }
-    console.log("Save drawing")
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard
+      .writeText(text)
+      .then(() => {
+        console.log("Text copied to clipboard")
+      })
+      .catch((err) => {
+        console.error("Error copying text: ", err)
+      })
   }
-
-  // Dynamic neumorphic styles
-  // const topGlowStyle = withTopGlow ? `, 0px -8px 15px rgba(255, 255, 255, ${isLight ? "0.8" : "0.3"})` : ""
 
   return (
-    <div
-      className="inline-flex items-center gap-2 p-2.5 rounded-full overflow-x-auto max-w-full"
-      style={{
-        backgroundColor: toolbarBgColor,
-        color: iconColor,
-        boxShadow: `6px 6px 12px ${shadowDark}, -6px -6px 12px ${shadowLight}`,
-        transition: "all 0.3s ease",
-      }}
-    >
-      {/* Drawing Tools */}
+    <div>
       <div
-        className="flex items-center gap-1 p-1.5 rounded-full"
-        style={{
-          backgroundColor: toolbarBgColor,
-          boxShadow: `4px 4px 8px ${shadowDark}, -4px -4px 8px ${shadowLight}`,
-        }}
+        className={cn(
+          "flex items-center gap-1 px-4 py-2",
+          "rounded-full",
+          "shadow-lg",
+          theme === "light"
+            ? "bg-white border border-gray-200 shadow-gray-200/50"
+            : "bg-[#2e2d39] border border-gray-800 shadow-black/30",
+        )}
       >
-        <Button
-          variant="ghost"
-          size="sm"
-          className={cn(
-            "h-9 w-9 p-0 rounded-full transition-all duration-200 hover:scale-105",
-            selectedTool === "pen" && "scale-95",
-          )}
-          onClick={() => handleToolClick("pen")}
-          style={{
-            backgroundColor: toolbarBgColor,
-            color: iconColor,
-            boxShadow:
-              selectedTool === "pen"
-                ? `inset 4px 4px 8px ${shadowDark}, inset -4px -4px 8px ${shadowLight}`
-                : `2px 2px 4px ${shadowDark}, -2px -2px 4px ${shadowLight}`,
-            border: selectedTool === "pen" ? `2px solid ${shadowDark}` : "none",
-          }}
-        >
-          <PenTool className={cn("w-4 h-4", selectedTool === "pen" && "w-5 h-5")} />
-          <span className="sr-only">Pen</span>
-        </Button>
+        {/* Lock Tool - Separated as independent entity */}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                className={cn(
+                  "p-2 transition-colors",
+                  "rounded-full",
+                  isLocked
+                    ? theme === "light"
+                      ? "bg-indigo-100 text-indigo-600"
+                      : "bg-indigo-900 text-indigo-300"
+                    : theme === "light"
+                      ? "text-gray-700 hover:bg-gray-100"
+                      : "text-gray-400 hover:bg-gray-800",
+                )}
+                onClick={() => setIsLocked(!isLocked)}
+              >
+                <Lock size={18} />
+                <span className="sr-only">Lock</span>
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="text-xs">Lock Canvas</p>\\\
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          className={cn(
-            "h-9 w-9 p-0 rounded-full transition-all duration-200 hover:scale-105",
-            selectedTool === "line" && "scale-95",
-          )}
-          onClick={() => handleToolClick("line")}
-          style={{
-            backgroundColor: toolbarBgColor,
-            color: iconColor,
-            boxShadow:
-              selectedTool === "line"
-                ? `inset 4px 4px 8px ${shadowDark}, inset -4px -4px 8px ${shadowLight}`
-                : `2px 2px 4px ${shadowDark}, -2px -2px 4px ${shadowLight}`,
-            border: selectedTool === "line" ? `2px solid ${shadowDark}` : "none",
-          }}
-        >
-          <Minus className={cn("w-4 h-4", selectedTool === "line" && "w-5 h-5")} />
-          <span className="sr-only">Line</span>
-        </Button>
+        <div className={cn("h-6 mx-2 border-l", theme === "light" ? "border-gray-300" : "border-gray-700")}></div>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          className={cn(
-            "h-9 w-9 p-0 rounded-full transition-all duration-200 hover:scale-105",
-            selectedTool === "circle" && "scale-95",
-          )}
-          onClick={() => handleToolClick("circle")}
-          style={{
-            backgroundColor: toolbarBgColor,
-            color: iconColor,
-            boxShadow:
-              selectedTool === "circle"
-                ? `inset 4px 4px 8px ${shadowDark}, inset -4px -4px 8px ${shadowLight}`
-                : `2px 2px 4px ${shadowDark}, -2px -2px 4px ${shadowLight}`,
-            border: selectedTool === "circle" ? `2px solid ${shadowDark}` : "none",
-          }}
-        >
-          <Circle className={cn("w-4 h-4", selectedTool === "circle" && "w-5 h-5")} />
-          <span className="sr-only">Circle</span>
-        </Button>
+        <TooltipProvider>
+          {tools.map((tool) => (
+            <Tooltip key={tool.id}>
+              <TooltipTrigger asChild>
+                <button
+                  className={cn(
+                    "p-2 transition-colors",
+                    "rounded-full",
+                    selectedTool === tool.id
+                      ? theme === "light"
+                        ? "bg-indigo-100 text-indigo-600"
+                        : "bg-indigo-900 text-indigo-300"
+                      : theme === "light"
+                        ? "text-gray-700 hover:bg-gray-100"
+                        : "text-gray-400 hover:bg-gray-800",
+                  )}
+                  onClick={() => setSelectedTool(tool.id)}
+                  disabled={isLocked}
+                >
+                  <tool.icon size={18} />
+                  <span className="sr-only">{tool.label}</span>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="text-xs">{tool.label}</p>
+              </TooltipContent>
+            </Tooltip>
+          ))}
+        </TooltipProvider>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          className={cn(
-            "h-9 w-9 p-0 rounded-full transition-all duration-200 hover:scale-105",
-            selectedTool === "rectangle" && "scale-95",
-          )}
-          onClick={() => handleToolClick("rectangle")}
-          style={{
-            backgroundColor: toolbarBgColor,
-            color: iconColor,
-            boxShadow:
-              selectedTool === "rectangle"
-                ? `inset 4px 4px 8px ${shadowDark}, inset -4px -4px 8px ${shadowLight}`
-                : `2px 2px 4px ${shadowDark}, -2px -2px 4px ${shadowLight}`,
-            border: selectedTool === "rectangle" ? `2px solid ${shadowDark}` : "none",
-          }}
-        >
-          <Square className={cn("w-4 h-4", selectedTool === "rectangle" && "w-5 h-5")} />
-          <span className="sr-only">Rectangle</span>
-        </Button>
+        {/* Color and Stroke Options */}
+        <div className={cn("h-6 mx-2 border-l", theme === "light" ? "border-gray-300" : "border-gray-700")}></div>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          className={cn(
-            "h-9 w-9 p-0 rounded-full transition-all duration-200 hover:scale-105",
-            selectedTool === "eraser" && "scale-95",
-          )}
-          onClick={() => handleToolClick("eraser")}
-          style={{
-            backgroundColor: toolbarBgColor,
-            color: iconColor,
-            boxShadow:
-              selectedTool === "eraser"
-                ? `inset 4px 4px 8px ${shadowDark}, inset -4px -4px 8px ${shadowLight}`
-                : `2px 2px 4px ${shadowDark}, -2px -2px 4px ${shadowLight}`,
-            border: selectedTool === "eraser" ? `2px solid ${shadowDark}` : "none",
-          }}
-        >
-          <Eraser className={cn("w-4 h-4", selectedTool === "eraser" && "w-5 h-5")} />
-          <span className="sr-only">Eraser</span>
-        </Button>
-      </div>
-
-      {/* Thickness Buttons */}
-      <div
-        className="flex items-center gap-1 p-1.5 rounded-full"
-        style={{
-          backgroundColor: toolbarBgColor,
-          boxShadow: `4px 4px 8px ${shadowDark}, -4px -4px 8px ${shadowLight}`,
-        }}
-      >
-        <Button
-          variant="ghost"
-          size="sm"
-          className={cn(
-            "h-9 w-9 p-0 rounded-full flex items-center justify-center transition-all duration-200",
-            thickness === "1" && "scale-95",
-          )}
-          onClick={() => setThickness("1")}
-          style={{
-            backgroundColor: toolbarBgColor,
-            boxShadow:
-              thickness === "1"
-                ? `inset 4px 4px 8px ${shadowDark}, inset -4px -4px 8px ${shadowLight}`
-                : `2px 2px 4px ${shadowDark}, -2px -2px 4px ${shadowLight}`,
-            border: thickness === "1" ? `2px solid ${shadowDark}` : "none",
-            transition: "all 0.2s ease",
-          }}
-        >
-          <div className="w-4 h-0.5 rounded-full bg-current" />
-          <span className="sr-only">Thin</span>
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          className={cn(
-            "h-9 w-9 p-0 rounded-full flex items-center justify-center transition-all duration-200",
-            thickness === "3" && "scale-95",
-          )}
-          onClick={() => setThickness("3")}
-          style={{
-            backgroundColor: toolbarBgColor,
-            boxShadow:
-              thickness === "3"
-                ? `inset 4px 4px 8px ${shadowDark}, inset -4px -4px 8px ${shadowLight}`
-                : `2px 2px 4px ${shadowDark}, -2px -2px 4px ${shadowLight}`,
-            border: thickness === "3" ? `2px solid ${shadowDark}` : "none",
-            transition: "all 0.2s ease",
-          }}
-        >
-          <div className="w-4 h-1 rounded-full bg-current" />
-          <span className="sr-only">Medium</span>
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          className={cn(
-            "h-9 w-9 p-0 rounded-full flex items-center justify-center transition-all duration-200",
-            thickness === "6" && "scale-95",
-          )}
-          onClick={() => setThickness("6")}
-          style={{
-            backgroundColor: toolbarBgColor,
-            boxShadow:
-              thickness === "6"
-                ? `inset 4px 4px 8px ${shadowDark}, inset -4px -4px 8px ${shadowLight}`
-                : `2px 2px 4px ${shadowDark}, -2px -2px 4px ${shadowLight}`,
-            border: thickness === "6" ? `2px solid ${shadowDark}` : "none",
-            transition: "all 0.2s ease",
-          }}
-        >
-          <div className="w-4 h-2 rounded-full bg-current" />
-          <span className="sr-only">Thick</span>
-        </Button>
-      </div>
-
-      {/* Color Pickers */}
-      <div
-        className="flex items-center gap-1 p-1.5 rounded-full"
-        style={{
-          backgroundColor: toolbarBgColor,
-          boxShadow: `4px 4px 8px ${shadowDark}, -4px -4px 8px ${shadowLight}`,
-        }}
-      >
+        {/* Stroke Color */}
         <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-9 w-9 p-0 rounded-full relative transition-all duration-200"
-              style={{
-                backgroundColor: toolbarBgColor,
-                boxShadow: `2px 2px 4px ${shadowDark}, -2px -2px 4px ${shadowLight}`,
-              }}
-            >
-              <div className="absolute inset-0 m-2 rounded-full" style={{ backgroundColor: selectedColor }} />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent
-            className="w-56 p-0 rounded-2xl border-none"
-            align="start"
-            style={{
-              backgroundColor: toolbarBgColor,
-              boxShadow: `8px 8px 16px ${shadowDark}, -8px -8px 16px ${shadowLight}`,
-              transition: "all 0.3s ease",
-            }}
-          >
-            {/* Color Palette */}
-            <div className="p-3">
-              <div className="grid grid-cols-4 gap-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <PopoverTrigger asChild>
+                  <button
+                    className={cn(
+                      "p-2 flex items-center justify-center",
+                      "rounded-full",
+                      theme === "light" ? "border border-gray-200" : "border border-gray-700",
+                    )}
+                    disabled={isLocked}
+                  >
+                    <div
+                      className="w-4 h-4 rounded-full border border-gray-400"
+                      style={{ backgroundColor: selectedColor }}
+                    ></div>
+                  </button>
+                </PopoverTrigger>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="text-xs">Stroke Color</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <PopoverContent className="w-64 p-2">
+            <Tabs defaultValue="preset">
+              <TabsList className="w-full mb-2">
+                <TabsTrigger value="preset" className="flex-1">
+                  Presets
+                </TabsTrigger>
+                <TabsTrigger value="custom" className="flex-1">
+                  Custom
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="preset" className="grid grid-cols-6 gap-1">
                 {colorOptions.map((color) => (
                   <button
-                    key={color.value}
-                    className="w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200"
-                    style={{
-                      backgroundColor: color.value,
-                      boxShadow:
-                        selectedColor === color.value
-                          ? `inset 3px 3px 6px ${shadowDark}, inset -3px -3px 6px ${shadowLight}`
-                          : `2px 2px 4px ${shadowDark}, -2px -2px 4px ${shadowLight}`,
-                    }}
-                    onClick={() => {
-                      handleStrokeColorChange(color.value)
-                      const button = document.activeElement as HTMLElement
-                      if (button) {
-                        button.style.transform = "scale(0.9)"
-                        setTimeout(() => {
-                          button.style.transform = "scale(1)"
-                        }, 150)
-                      }
-                    }}
-                  >
-                    {selectedColor === color.value && (
-                      <Check
-                        className={cn(
-                          "w-5 h-5",
-                          ["#FFFFFF", "#FFFF00", "#00FF00", "#00FFFF", "#FFC0CB"].includes(color.value)
-                            ? "text-black"
-                            : "text-white",
-                        )}
-                      />
+                    key={color}
+                    className={cn(
+                      "w-8 h-8 rounded-full border",
+                      color === selectedColor ? "ring-2 ring-offset-2 ring-blue-500" : "",
+                      theme === "light" ? "border-gray-300" : "border-gray-600",
                     )}
-                  </button>
+                    style={{ backgroundColor: color }}
+                    onClick={() => setSelectedColor(color)}
+                  ></button>
                 ))}
-              </div>
-            </div>
-
-            {/* Custom Color */}
-            <div className="p-3 border-t border-gray-200">
-              <div className="flex gap-2">
-                <div className="relative">
+              </TabsContent>
+              <TabsContent value="custom">
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-medium">Custom Color</label>
                   <input
                     type="color"
-                    value={customStrokeColor}
-                    onChange={(e) => setCustomStrokeColor(e.target.value)}
-                    className="w-10 h-10 rounded-lg cursor-pointer opacity-0 absolute inset-0 z-10"
-                  />
-                  <div
-                    className="w-10 h-10 rounded-lg"
-                    style={{
-                      backgroundColor: customStrokeColor,
-                      boxShadow: `2px 2px 4px ${shadowDark}, -2px -2px 4px ${shadowLight}`,
-                    }}
+                    value={selectedColor}
+                    onChange={(e) => setSelectedColor(e.target.value)}
+                    className="w-full h-8"
                   />
                 </div>
-                <Button
-                  size="sm"
-                  onClick={() => handleStrokeColorChange(customStrokeColor)}
-                  className="rounded-lg flex-1"
-                  style={{
-                    backgroundColor: toolbarBgColor,
-                    color: textColor,
-                    boxShadow: `2px 2px 4px ${shadowDark}, -2px -2px 4px ${shadowLight}`,
-                  }}
-                >
-                  Apply
-                </Button>
-              </div>
-            </div>
+              </TabsContent>
+            </Tabs>
           </PopoverContent>
         </Popover>
 
+        {/* Fill Color */}
         <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-9 w-9 p-0 rounded-full relative transition-all duration-200"
-              style={{
-                backgroundColor: toolbarBgColor,
-                boxShadow: `2px 2px 4px ${shadowDark}, -2px -2px 4px ${shadowLight}`,
-              }}
-            >
-              <div
-                className="absolute inset-0 m-2 rounded-full border border-gray-300"
-                style={{ backgroundColor: selectedbgColor }}
-              />
-              <div className="absolute bottom-1 right-1 w-2.5 h-2.5 bg-white rounded-full flex items-center justify-center border border-gray-300">
-                <Palette className="w-1.5 h-1.5 text-gray-500" />
-              </div>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent
-            className="w-56 p-0 rounded-2xl border-none"
-            align="start"
-            style={{
-              backgroundColor: toolbarBgColor,
-              boxShadow: `8px 8px 16px ${shadowDark}, -8px -8px 16px ${shadowLight}`,
-              transition: "all 0.3s ease",
-            }}
-          >
-            {/* Color Palette */}
-            <div className="p-3">
-              <div className="grid grid-cols-4 gap-2">
-                {backgroundOptions.map((color: ColorOption) => (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <PopoverTrigger asChild>
                   <button
-                    key={color.value}
-                    className="w-10 h-10 rounded-lg flex items-center justify-center border border-gray-300 transition-all duration-200"
-                    style={{
-                      backgroundColor: color.value,
-                      boxShadow:
-                        selectedbgColor === color.value
-                          ? `inset 3px 3px 6px ${shadowDark}, inset -3px -3px 6px ${shadowLight}`
-                          : `2px 2px 4px ${shadowDark}, -2px -2px 4px ${shadowLight}`,
-                    }}
-                    onClick={() => {
-                      handleBgColorChange(color.value)
-                      const button = document.activeElement as HTMLElement
-                      if (button) {
-                        button.style.transform = "scale(0.9)"
-                        setTimeout(() => {
-                          button.style.transform = "scale(1)"
-                        }, 150)
-                      }
-                    }}
-                  >
-                    {selectedbgColor === color.value && (
-                      <Check
-                        className={cn(
-                          "w-5 h-5",
-                          ["#FFFFFF", "#FFFF00", "#00FF00", "#00FFFF", "#FFC0CB"].includes(color.value)
-                            ? "text-black"
-                            : "text-white",
-                        )}
-                      />
+                    className={cn(
+                      "p-2 flex items-center justify-center",
+                      "rounded-full",
+                      theme === "light" ? "border border-gray-200" : "border border-gray-700",
                     )}
+                    disabled={isLocked}
+                  >
+                    <div
+                      className="w-4 h-4 rounded-full border border-gray-400"
+                      style={{ backgroundColor: selectedbgColor }}
+                    ></div>
                   </button>
+                </PopoverTrigger>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="text-xs">Fill Color</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <PopoverContent className="w-64 p-2">
+            <Tabs defaultValue="preset">
+              <TabsList className="w-full mb-2">
+                <TabsTrigger value="preset" className="flex-1">
+                  Presets
+                </TabsTrigger>
+                <TabsTrigger value="custom" className="flex-1">
+                  Custom
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="preset" className="grid grid-cols-6 gap-1">
+                {colorOptions.map((color) => (
+                  <button
+                    key={color}
+                    className={cn(
+                      "w-8 h-8 rounded-full border",
+                      color === selectedbgColor ? "ring-2 ring-offset-2 ring-blue-500" : "",
+                      theme === "light" ? "border-gray-300" : "border-gray-600",
+                    )}
+                    style={{ backgroundColor: color }}
+                    onClick={() => setSelectedbgColor(color)}
+                  ></button>
                 ))}
-              </div>
-            </div>
-
-            {/* Custom Color */}
-            <div className="p-3 border-t border-gray-200">
-              <div className="flex gap-2">
-                <div className="relative">
+              </TabsContent>
+              <TabsContent value="custom">
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-medium">Custom Color</label>
                   <input
                     type="color"
-                    value={customBgColor}
-                    onChange={(e) => setCustomBgColor(e.target.value)}
-                    className="w-10 h-10 rounded-lg cursor-pointer opacity-0 absolute inset-0 z-10"
-                  />
-                  <div
-                    className="w-10 h-10 rounded-lg border border-gray-300"
-                    style={{
-                      backgroundColor: customBgColor,
-                      boxShadow: `2px 2px 4px ${shadowDark}, -2px -2px 4px ${shadowLight}`,
-                    }}
+                    value={selectedbgColor}
+                    onChange={(e) => setSelectedbgColor(e.target.value)}
+                    className="w-full h-8"
                   />
                 </div>
-                <Button
-                  size="sm"
-                  onClick={() => handleBgColorChange(customBgColor)}
-                  className="rounded-lg flex-1"
-                  style={{
-                    backgroundColor: toolbarBgColor,
-                    color: textColor,
-                    boxShadow: `2px 2px 4px ${shadowDark}, -2px -2px 4px ${shadowLight}`,
-                  }}
-                >
-                  Apply
-                </Button>
+              </TabsContent>
+            </Tabs>
+          </PopoverContent>
+        </Popover>
+
+        {/* Stroke Width - Updated to be consistent size in toolbar */}
+        <Popover>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <PopoverTrigger asChild>
+                  <button
+                    className={cn(
+                      "p-2 flex items-center justify-center",
+                      "rounded-full",
+                      theme === "light" ? "border border-gray-200" : "border border-gray-700",
+                    )}
+                    disabled={isLocked}
+                  >
+                    <div
+                      className="w-4 h-4 rounded-full flex items-center justify-center"
+                    >
+                      <div
+                        className={cn("rounded-full", theme === "light" ? "bg-black" : "bg-white")}
+                        style={{
+                          width: `${Math.min(Number(thickness), 8)}px`,
+                          height: `${Math.min(Number(thickness), 8)}px`,
+                        }}
+                      ></div>
+                    </div>
+                  </button>
+                </PopoverTrigger>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="text-xs">Stroke Width</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <PopoverContent className={cn("w-64 p-4", theme === "light" ? "bg-white border-gray-200" : "bg-[#1e1e24] border-gray-800")}>
+            <div className="space-y-4">
+              <h4 className={cn("font-medium text-sm mb-2", theme === "light" ? "text-gray-800" : "text-white")}>Stroke Thickness</h4>
+              <div className="flex items-center justify-between">
+                {[1, 2, 4, 6, 8].map((size) => (
+                  <div key={size} className="flex flex-col items-center gap-1">
+                    <button
+                      className={cn(
+                        "flex items-center justify-center rounded-md transition-colors",
+                        thickness === size.toString() 
+                          ? theme === "light"
+                            ? "bg-indigo-500" 
+                            : "bg-indigo-600"
+                          : theme === "light"
+                            ? "bg-transparent hover:bg-indigo-100"
+                            : "bg-transparent hover:bg-indigo-900",
+                        "w-10 h-10",
+                      )}
+                      onClick={() => setThickness(size.toString())}
+                    >
+                      <div className="w-6 h-6 rounded-full flex items-center justify-center">
+                        <div
+                          className={cn("rounded-full", theme === "light" ? "bg-black" : "bg-white")}
+                          style={{
+                            width: `${size}px`,
+                            height: `${size}px`,
+                          }}
+                        ></div>
+                      </div>
+                    </button>
+                    <span className="text-xs text-gray-400">{size}px</span>
+                  </div>
+                ))}
               </div>
             </div>
           </PopoverContent>
         </Popover>
+
+        <div className={cn("h-6 mx-2 border-l", theme === "light" ? "border-gray-300" : "border-gray-700")}></div>
+
+        <div className="ml-auto flex items-center gap-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  className={cn(
+                    "p-2 transition-colors rounded-full",
+                    theme === "light" ? "text-gray-700 hover:bg-gray-100" : "text-gray-400 hover:bg-gray-800",
+                  )}
+                  onClick={handleClearAll}
+                  disabled={isLocked}
+                >
+                  <Trash2 size={18} />
+                  <span className="sr-only">Clear Canvas</span>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="text-xs">Clear Canvas</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          {saveAsImage && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    className={cn(
+                      "p-2 transition-colors rounded-full",
+                      theme === "light" ? "text-gray-700 hover:bg-gray-100" : "text-gray-400 hover:bg-gray-800",
+                    )}
+                    onClick={saveAsImage}
+                  >
+                    <Save size={18} />
+                    <span className="sr-only">Save Image</span>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs">Save Image</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+
+          <Button
+            className={cn(
+              "rounded-full",
+              theme === "light"
+                ? "bg-indigo-100 text-indigo-600 hover:bg-indigo-200"
+                : "bg-indigo-600 text-white hover:bg-indigo-700",
+            )}
+            onClick={handleShareClick}
+          >
+            <Share size={18} className="mr-2" />
+            Share
+          </Button>
+        </div>
       </div>
 
-      {/* Action Buttons */}
-      <div
-        className="flex items-center gap-1 ml-auto p-1.5 rounded-full"
-        style={{
-          backgroundColor: toolbarBgColor,
-          boxShadow: `4px 4px 8px ${shadowDark}, -4px -4px 8px ${shadowLight}`,
-        }}
-      >
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleUndo}
-          disabled={!canUndo}
-          className={cn(
-            "h-9 w-9 p-0 rounded-full transition-all duration-200",
-            "disabled:opacity-50 disabled:cursor-not-allowed",
-          )}
-          style={{
-            backgroundColor: toolbarBgColor,
-            color: iconColor,
-            boxShadow: `2px 2px 4px ${shadowDark}, -2px -2px 4px ${shadowLight}`,
-          }}
-        >
-          <Undo className="w-4 h-4" />
-          <span className="sr-only">Undo</span>
-        </Button>
+      <p className={cn("text-sm mt-2 text-center", theme === "light" ? "text-gray-400" : "text-gray-700")}>Room ID: {roomId}</p>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleRedo}
-          disabled={!canRedo}
-          className={cn(
-            "h-9 w-9 p-0 rounded-full transition-all duration-200",
-            "disabled:opacity-50 disabled:cursor-not-allowed",
-          )}
-          style={{
-            backgroundColor: toolbarBgColor,
-            color: iconColor,
-            boxShadow: `2px 2px 4px ${shadowDark}, -2px -2px 4px ${shadowLight}`,
-          }}
-        >
-          <Redo className="w-4 h-4" />
-          <span className="sr-only">Redo</span>
-        </Button>
+      {/* Share Dialog - Updated to match the provided design */}
+      <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+        <DialogContent className={cn(
+          "sm:max-w-md border",
+          theme === "light" 
+            ? "bg-white text-gray-800 border-gray-200"
+            : "bg-[#1e1e24] text-white border-gray-800"
+        )}>
+          <DialogHeader>
+            <DialogTitle className={cn(
+              "text-2xl font-semibold text-center",
+              theme === "light" ? "text-indigo-600" : "text-indigo-400"
+            )}>Live collaboration</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center text-center">
+            <p className="mb-4">Invite people to collaborate on your drawing.</p>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleSave}
-          className="h-9 w-9 p-0 rounded-full transition-all duration-200"
-          style={{
-            backgroundColor: toolbarBgColor,
-            color: iconColor,
-            boxShadow: `2px 2px 4px ${shadowDark}, -2px -2px 4px ${shadowLight}`,
-          }}
-        >
-          <Save className="w-4 h-4" />
-          <span className="sr-only">Save</span>
-        </Button>
+            <p className={cn(
+              "text-sm mb-6",
+              theme === "light" ? "text-gray-600" : "text-gray-400"
+            )}>
+              Work together with your team in real-time. See changes as they happen and collaborate seamlessly.
+            </p>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleClearAll}
-          className="h-9 w-9 p-0 rounded-full transition-all duration-200"
-          style={{
-            backgroundColor: toolbarBgColor,
-            color: iconColor,
-            boxShadow: `2px 2px 4px ${shadowDark}, -2px -2px 4px ${shadowLight}`,
-          }}
-        >
-          <Trash2 className="w-4 h-4" />
-          <span className="sr-only">Clear All</span>
-        </Button>
-      </div>
+            <Button 
+              className={cn(
+                "w-48",
+                theme === "light"
+                ? "bg-indigo-100 text-indigo-600 hover:bg-indigo-200"
+                : "bg-indigo-600 text-white hover:bg-indigo-700",
+              )} 
+              onClick={handleExportLinkClick}
+            >
+              <Link size={16} className="mr-2" />
+              Export to Link
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Export Link Dialog - Updated to match the provided design */}
+      <Dialog open={exportLinkDialogOpen} onOpenChange={setExportLinkDialogOpen}>
+        <DialogContent className={cn(
+          "sm:max-w-md border",
+          theme === "light" 
+            ? "bg-white text-gray-800 border-gray-200"
+            : "bg-[#1e1e24] text-white border-gray-800"
+        )}>
+          <DialogHeader>
+            <DialogTitle className={cn(
+              "text-2xl font-semibold mb-2",
+              theme === "light" ? "text-indigo-600" : "text-indigo-400"
+            )}>Shareable link</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col">
+            <div className="mb-2">
+              <p className={cn(
+                "text-sm mb-2",
+                theme === "light" ? "text-gray-600" : "text-gray-300"
+              )}>Link</p>
+              <div className="flex gap-2">
+                <Input
+                  value={`http://localhost:3000/canvas/${roomId}`}
+                  readOnly
+                  className={cn(
+                    "flex-1",
+                    theme === "light"
+                      ? "bg-gray-50 border-gray-200 text-gray-700"
+                      : "bg-[#2d2d36] border-gray-700 text-gray-300"
+                  )}
+                />
+                <Button
+                  className={cn(
+                    "custom-selection",
+                    theme === "light"
+                    ? "bg-indigo-100 text-indigo-600 hover:bg-indigo-200"
+                    : "bg-indigo-600 text-white hover:bg-indigo-700",
+                  )}
+                  onClick={() => copyToClipboard(`http://localhost:3000/canvas/${roomId}`)}
+                >
+                  <Copy size={16} className="mr-2" />
+                  Copy link
+                </Button>
+              </div>
+            </div>
+
+            <Separator className={theme === "light" ? "my-6 bg-gray-200" : "my-6 bg-gray-700"} />
+
+            <div className="flex items-start gap-2 text-sm">
+              <LockIcon size={16} className="mt-0.5 text-amber-500 shrink-0" />
+              <p className={theme === "light" ? "text-gray-600" : "text-gray-300"}>
+                The upload has been secured with end-to-end encryption, which means that draww.io server and third
+                parties can't read the content.
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
-}
-
-// Helper functions
-function darkenColor(color: string, amount: number): string {
-  return adjustColor(color, -amount)
-}
-
-function lightenColor(color: string, amount: number): string {
-  return adjustColor(color, amount)
-}
-
-function adjustColor(color: string, amount: number): string {
-  // Remove the # if present
-  const hex = color.replace("#", "")
-
-  // Convert to RGB
-  let r = Number.parseInt(hex.substring(0, 2), 16)
-  let g = Number.parseInt(hex.substring(2, 4), 16)
-  let b = Number.parseInt(hex.substring(4, 6), 16)
-
-  // Lighten or darken
-  r = Math.min(255, Math.max(0, Math.round(r + amount * 255)))
-  g = Math.min(255, Math.max(0, Math.round(g + amount * 255)))
-  b = Math.min(255, Math.max(0, Math.round(b + amount * 255)))
-
-  // Convert back to hex
-  return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`
-}
-
-function isLightColor(color: string): boolean {
-  const hex = color.replace("#", "")
-  const r = Number.parseInt(hex.substring(0, 2), 16)
-  const g = Number.parseInt(hex.substring(2, 4), 16)
-  const b = Number.parseInt(hex.substring(4, 6), 16)
-
-  // Calculate perceived brightness using the formula: (0.299*R + 0.587*G + 0.114*B)
-  const brightness = (r * 0.299 + g * 0.587 + b * 0.114) / 255
-
-  return brightness > 0.5
 }

@@ -105,8 +105,13 @@ export default function SignIn() {
                         title: res.data.message,
                         description: "Welcome back to Sketch Board.",
                     })
-
-            }} catch(error) {
+                    
+                    // Only redirect after successful authentication
+                    setTimeout(() => {
+                        window.location.href = redirectUrl || "/dashboard"
+                    }, 1000)
+                }
+            } catch(error) {
                 if (axios.isAxiosError(error)) {
                     // Get the error response data
                     const errorMessage = error.response?.data?.message || "Failed to sign in";
@@ -117,6 +122,8 @@ export default function SignIn() {
                         description: errorMessage,
                     })
 
+                    return
+
                 } else {
                     // For non-axios errors
                     toast({
@@ -124,14 +131,11 @@ export default function SignIn() {
                         title: "Something went wrong",
                         description: "Please try again later.",
                     })
-
                 }
             } finally {
                 setIsLoading(false)
             }
-        // Redirect to the original URL if available, otherwise to dashboard
-        window.location.href = redirectUrl || "/dashboard"
-            },1000)
+        },1000)
     }
 
     const fadeUpVariants = {

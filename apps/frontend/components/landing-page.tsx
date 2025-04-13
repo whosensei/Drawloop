@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 // import { ModeToggle } from "@/components/mode-toggle"
 import { ElegantShape } from "@/components/elegant-shape"
+import { useTheme } from "@/components/theme-toggle"
 
 const pacifico = Pacifico({
   subsets: ["latin"],
@@ -18,6 +19,7 @@ const pacifico = Pacifico({
 })
 
 export default function LandingPage() {
+  const { theme } = useTheme()
   const fadeUpVariants = {
     hidden: { opacity: 0, y: 30 },
     visible: (i: number) => ({
@@ -137,7 +139,11 @@ export default function LandingPage() {
             >
               <Link href="/signin">Sign In</Link>
             </Button>
-            <Button asChild size="lg" className="border-white/20 text-white hover:bg-white/10">
+            <Button 
+              asChild 
+              size="lg"
+              className="bg-white/10 text-white hover:bg-white/20 border border-white/10"
+            >
               <Link href="/signup">Sign Up</Link>
             </Button>
           </motion.div>

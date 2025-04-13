@@ -111,6 +111,10 @@
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.552 0.016 285.938);
 }
+.custom-selection::selection {
+  background-color: #a5b4fc; /* Tailwind's indigo-300 */
+  color: #1e3a8a;            /* Tailwind's indigo-900 */
+}
 
 @layer base {
   * {
