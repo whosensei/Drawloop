@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 import { db } from "@repo/db";
 import { User, Room, chats, userRooms } from "@repo/db/schema";
 import middleware from "./middleware";
-import { eq, desc, inArray } from "drizzle-orm";
+import { eq, desc, inArray, and } from "drizzle-orm";
 const app = express();
 import cors from "cors"
 import { log } from "console";
@@ -306,6 +306,66 @@ app.post("/add-user-to-room", middleware, async(req: Request, res: Response): Pr
       message: "Failed to join room"
     });
     return;
+  }
+});
+
+app.delete("/shapes", async (req: Request, res: Response) => {
+  try {
+    const { roomId, shapeIds } = req.body;
+
+    // Validate input
+    const parsedRoomId = parseInt(roomId);
+    if (isNaN(parsedRoomId)) {
+      res.status(400).json({ message: "Invalid Room ID format." });
+      return;
+    }
+    if (!Array.isArray(shapeIds) || shapeIds.length === 0 || !shapeIds.every(id => typeof id === 'string')) {
+       res.status(400).json({ message: "Invalid or empty shapeIds array provided." });
+       return;
+    }
+
+    console.log(`Processing delete request for roomId: ${parsedRoomId}, shapeIds:`, shapeIds);
+
+    // 1. Fetch all chat entries for the room
+    const roomChats = await db.select().from(chats).where(eq(chats.roomId, parsedRoomId));
+    console.log(`Found ${roomChats.length} total chat entries for room ${parsedRoomId}`);
+
+    // 2. Identify chat IDs containing the shapes to delete
+    const chatIdsToDelete: number[] = [];
+    roomChats.forEach(chat => {
+      try {
+        const messageContent = JSON.parse(chat.message);
+        // Check if the message structure is as expected and contains a shape with an ID
+        if (messageContent && messageContent.shape && messageContent.shape.id && shapeIds.includes(messageContent.shape.id)) {
+           if(chat.id) { // Ensure chat.id is not null/undefined
+             chatIdsToDelete.push(chat.id);
+           }
+        }
+      } catch (parseError) {
+        // Log parsing errors but continue, as some messages might not be shapes
+        console.warn(`Could not parse chat message ID ${chat.id} in room ${parsedRoomId}:`, parseError);
+      }
+    });
+
+    // 3. Delete the identified chat entries
+    if (chatIdsToDelete.length > 0) {
+      console.log(`Attempting to delete ${chatIdsToDelete.length} chat entries for shapes:`, shapeIds);
+      try {
+        const deleteResult = await db.delete(chats).where(inArray(chats.id, chatIdsToDelete));
+        console.log("Deletion result:", deleteResult);
+        res.status(200).json({ message: `Successfully deleted ${chatIdsToDelete.length} shape(s).` });
+      } catch (deleteError) {
+        console.error("Error during delete operation:", deleteError);
+        res.status(500).json({ message: "Database error while deleting shapes." });
+      }
+    } else {
+      console.log("No matching chat entries found to delete for shape IDs:", shapeIds);
+      res.status(404).json({ message: "No shapes found matching the provided IDs in this room." });
+    }
+
+  } catch (error) {
+    console.error("Error deleting shapes:", error);
+    res.status(500).json({ message: "Failed to delete shapes due to a server error." });
   }
 });
 

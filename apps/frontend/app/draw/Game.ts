@@ -1,5 +1,5 @@
 import { Tool, StrokeThickness } from "@/components/canvas";
-import { getExistingShapes } from "./http";
+import { getExistingShapes, deleteShapes } from "./http";
 
 type shapes = {
     type: "rect",
@@ -9,7 +9,7 @@ type shapes = {
     height: number,
     color: string,
     thickness: number,
-    id?: string
+    id: string
 } |
 {
     type: "circle",
@@ -18,7 +18,7 @@ type shapes = {
     radius: number,
     color: string,
     thickness: number,
-    id?: string
+    id: string
 } |
 {
     type: "line",
@@ -28,7 +28,7 @@ type shapes = {
     height: number,
     color: string,
     thickness: number,
-    id?: string
+    id: string
 } |
 {
     type: "triangle",
@@ -38,7 +38,7 @@ type shapes = {
     height: number,
     color: string,
     thickness: number,
-    id?: string
+    id: string
 } |
 {
     type: "arrow",
@@ -48,14 +48,14 @@ type shapes = {
     height: number,
     color: string,
     thickness: number,
-    id?: string
+    id: string
 } |
 {
     type: "pen",
     points: { x: number, y: number }[],
     color: string,
     thickness: number,
-    id?: string
+    id: string
 } |
 {
     type: "eraser",
@@ -81,7 +81,7 @@ export class Game {
     private hasTouch: boolean;
     private lastX: number = 0;
     private lastY: number = 0;
-    private eraserLineWidth: number = 55;
+    private shapesToErase: Set<string> = new Set();
 
     socket: WebSocket;
 
@@ -92,7 +92,6 @@ export class Game {
         this.roomId = roomId;
         this.socket = socket;
         this.clicked = false;
-        // Detect touch support
         this.hasTouch = 'ontouchstart' in window;
         this.init();
         this.initHandlers();
@@ -103,6 +102,9 @@ export class Game {
         this.canvas.removeEventListener("mousedown", this.mouseDownHandler);
         this.canvas.removeEventListener("mouseup", this.mouseUpHandler);
         this.canvas.removeEventListener("mousemove", this.mouseMoveHandler);
+        this.canvas.removeEventListener("touchstart", this.mouseDownHandler);
+        this.canvas.removeEventListener("touchend", this.mouseUpHandler);
+        this.canvas.removeEventListener("touchmove", this.mouseMoveHandler);
     }
 
     setTool(tool: Tool) {
@@ -126,39 +128,61 @@ export class Game {
 
     async init() {
         this.existingShapes = await getExistingShapes(this.roomId);
-        console.log(this.existingShapes);
+        this.existingShapes = this.existingShapes.map(shape => {
+            if (shape.type !== 'eraser' && !shape.id) {
+                shape.id = this.generateUniqueId();
+            }
+            return shape;
+        }).filter(shape => shape.type !== 'eraser');
+        console.log("Initialized shapes:", this.existingShapes);
         this.clearCanvas();
+    }
+
+    private generateUniqueId(): string {
+        return Date.now() + Math.random().toString(36).substr(2, 9);
     }
 
     initHandlers() {
         this.socket.onmessage = (event) => {
-            const msg = JSON.parse(event.data);
-            if (msg.type === "chat") {
-                const shapedata = JSON.parse(msg.message);
-                console.log(shapedata);
+            try {
+                const msg = JSON.parse(event.data);
+                if (msg.type === "chat") {
+                    const shapedata = JSON.parse(msg.message);
+                    console.log("Received shape data:", shapedata);
 
-                if (shapedata.shape.type === "eraser") {
-                    // Remove shapes with IDs in the targetIds array
-                    const targetIds = shapedata.shape.targetIds;
-                    // Use filter to create a new array rather than modifying the existing one
-                    const updatedShapes = this.existingShapes.filter(shape => {
-                        if ('id' in shape) {
-                            return !targetIds.includes(shape.id);
+                    if (shapedata.shape.type === "eraser") {
+                        const targetIds = shapedata.shape.targetIds;
+                        if (Array.isArray(targetIds)) {
+                            const initialLength = this.existingShapes.length;
+                            this.existingShapes = this.existingShapes.filter(shape => 
+                                shape.type === 'eraser' || !targetIds.includes(shape.id)
+                            );
+                            console.log(`Eraser message processed, removed ${initialLength - this.existingShapes.length} shapes locally.`);
+                            this.clearCanvas();
+                        } else {
+                            console.warn("Received eraser message with invalid targetIds:", targetIds);
                         }
-                        return true;
-                    });
-                    // Clear the array and push new items (maintaining reference)
-                    this.existingShapes.length = 0;
-                    updatedShapes.forEach(shape => this.existingShapes.push(shape));
-                } else {
-                    // Generate a unique ID for the new shape if it doesn't have one
-                    if (!shapedata.shape.id) {
-                        shapedata.shape.id = Date.now() + Math.random().toString(36).substr(2, 9);
-                    }
-                    this.existingShapes.push(shapedata.shape);
-                }
+                    } else if (shapedata.shape.type) {
+                        if (!shapedata.shape.id) {
+                            shapedata.shape.id = this.generateUniqueId();
+                            console.log(`Generated ID for incoming shape: ${shapedata.shape.id}`);
+                        }
+                        
+                        if (!this.existingShapes.some(s => s.type !== 'eraser' && s.id === shapedata.shape.id)) {
+                            this.existingShapes.push(shapedata.shape);
+                            console.log(`Added shape with ID: ${shapedata.shape.id}`);
+                            this.clearCanvas();
+                        } else {
+                             console.log(`Duplicate shape ignored: ${shapedata.shape.id}`);
+                        }
 
-                this.clearCanvas();
+                    } else {
+                        console.warn("Received message with unknown shape type:", shapedata);
+                    }
+
+                }
+            } catch (error) {
+                console.error("Failed to process WebSocket message:", error, "Data:", event.data);
             }
         };
     }
@@ -168,7 +192,7 @@ export class Game {
         this.ctx.fillStyle = this.selectedbgColor;
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-        this.existingShapes.forEach((shape) => {
+        this.existingShapes.filter(shape => shape.type !== 'eraser').forEach((shape) => {
             if (shape.type === "rect") {
                 this.ctx.strokeStyle = shape.color;
                 this.ctx.lineWidth = Number(shape.thickness);
@@ -191,25 +215,22 @@ export class Game {
                 this.ctx.strokeStyle = shape.color;
                 this.ctx.lineWidth = Number(shape.thickness);
                 
-                // Draw from the starting point (fixed position)
                 this.ctx.moveTo(shape.StartX, shape.StartY);
                 this.ctx.lineTo(shape.StartX + shape.width, shape.StartY);
                 this.ctx.lineTo(shape.StartX + shape.width/2, shape.StartY + shape.height);
                 this.ctx.closePath();
                 this.ctx.stroke();
             } else if (shape.type === "arrow") {
-                const headLength = Math.min(Math.abs(shape.width), Math.abs(shape.height)) / 4;
+                const headLength = Math.min(Math.abs(shape.width), Math.abs(shape.height)) / 4 || 10;
                 const angle = Math.atan2(shape.height, shape.width);
                 
                 this.ctx.beginPath();
                 this.ctx.strokeStyle = shape.color;
                 this.ctx.lineWidth = Number(shape.thickness);
                 
-                // Draw the line
                 this.ctx.moveTo(shape.StartX, shape.StartY);
                 this.ctx.lineTo(shape.StartX + shape.width, shape.StartY + shape.height);
                 
-                // Draw the arrowhead
                 this.ctx.lineTo(
                     shape.StartX + shape.width - headLength * Math.cos(angle - Math.PI / 6),
                     shape.StartY + shape.height - headLength * Math.sin(angle - Math.PI / 6)
@@ -222,16 +243,18 @@ export class Game {
                 
                 this.ctx.stroke();
             } else if (shape.type === "pen") {
+                if (!shape.points || shape.points.length < 2) return;
                 this.ctx.beginPath();
                 this.ctx.strokeStyle = shape.color;
                 this.ctx.lineWidth = Number(shape.thickness);
-                const [first, ...rest] = shape.points;
-                if (first) this.ctx.moveTo(first.x, first.y);
-                rest.forEach(pt => this.ctx.lineTo(pt.x, pt.y));
+                this.ctx.lineCap = 'round';
+                this.ctx.lineJoin = 'round';
+                this.ctx.moveTo(shape.points[0].x, shape.points[0].y);
+                for (let i = 1; i < shape.points.length; i++) {
+                    this.ctx.lineTo(shape.points[i].x, shape.points[i].y);
+                }
                 this.ctx.stroke();
             } 
-            
-            // No need to render eraser shapes - they only represent deletions
         });
     }
 
@@ -239,31 +262,19 @@ export class Game {
         this.clicked = true;
         this.drawing = true;
         
-        // Handle both mouse and touch events
-        if ('touches' in e) {
-            this.startX = e.touches[0].clientX;
-            this.startY = e.touches[0].clientY;
-        } else {
-        this.startX = e.clientX;
-        this.startY = e.clientY;
-        }
+        const pos = this.getEventPosition(e);
+        this.startX = pos.x;
+        this.startY = pos.y;
         
         this.lastX = this.startX;
         this.lastY = this.startY;
 
         if (this.selectedTool === "eraser") {
-            // Set up eraser drawing context
-            this.ctx.save();
-            this.ctx.beginPath();
-            this.ctx.lineCap = 'round';
-            this.ctx.lineJoin = 'round';
-            this.ctx.lineWidth = this.eraserLineWidth;
-            this.ctx.globalCompositeOperation = 'destination-out';
-            this.ctx.moveTo(this.startX, this.startY);
-        } else {
+            this.shapesToErase.clear();
+            this.checkEraserIntersection(this.startX, this.startY);
+        } else if (this.selectedTool === "pen") {
             this.currentPenPoints = [{ x: this.startX, y: this.startY }];
-            this.ctx.beginPath();
-            this.ctx.moveTo(this.startX, this.startY);
+        } else {
         }
     }
 
@@ -273,291 +284,444 @@ export class Game {
         this.clicked = false;
         this.drawing = false;
 
-        // Don't create a shape if we're adding text
         if (this.isAddingText) return;
         
-        // Get current position from event
-        let currentX: number, currentY: number;
-        if ('changedTouches' in e) {
-            currentX = e.changedTouches[0].clientX;
-            currentY = e.changedTouches[0].clientY;
-        } else {
-            currentX = e.clientX;
-            currentY = e.clientY;
+        const pos = this.getEventPosition(e);
+        let currentX = pos.x;
+        let currentY = pos.y;
+
+        const distance = Math.sqrt((currentX - this.startX) ** 2 + (currentY - this.startY) ** 2);
+        const minimumDistance = 5;
+
+        if (this.selectedTool === "eraser") {
+            const idsToErase = Array.from(this.shapesToErase);
+            if (idsToErase.length > 0) {
+                const shape: shapes = {
+                    type: "eraser",
+                    targetIds: idsToErase
+                };
+                const messageData = JSON.stringify({ shape });
+                const socketData = JSON.stringify({
+                    type: "chat",
+                    message: messageData,
+                    roomId: this.roomId
+                });
+                this.socket.send(socketData);
+                console.log("Sent eraser message for IDs:", shape.targetIds);
+                
+                deleteShapes(this.roomId, idsToErase);
+
+                this.shapesToErase.clear();
+            }
+            this.clearCanvas();
+            return;
+        }
+
+        if (distance < minimumDistance && this.selectedTool !== 'pen') {
+            this.clearCanvas();
+            return;
         }
 
         let shape: shapes | null = null;
-        const shapeId = Date.now() + Math.random().toString(36).substr(2, 9);
+        const shapeId = this.generateUniqueId();
 
-        if (this.selectedTool === "rectangle") {
-            shape = {
-                type: "rect",
-                StartX: this.startX,
-                StartY: this.startY,
-                width: currentX - this.startX,
-                height: currentY - this.startY,
-                color: this.selectedColor,
-                thickness: Number(this.thickness),
-                id: shapeId
-            };
-        } else if (this.selectedTool === "circle") {
-            shape = {
-                type: "circle",
-                StartX: this.startX,
-                StartY: this.startY,
-                radius: Math.sqrt((currentX - this.startX) ** 2 + (currentY - this.startY) ** 2),
-                color: this.selectedColor,
-                thickness: Number(this.thickness),
-                id: shapeId
-            };
-        } else if (this.selectedTool === "line") {
-            shape = {
-                type: "line",
-                StartX: this.startX,
-                StartY: this.startY,
-                width: currentX - this.startX,
-                height: currentY - this.startY,
-                color: this.selectedColor,
-                thickness: Number(this.thickness),
-                id: shapeId
-            };
-        } else if (this.selectedTool === "triangle") {
-            shape = {
-                type: "triangle",
-                StartX: this.startX,
-                StartY: this.startY,
-                width: currentX - this.startX,
-                height: currentY - this.startY,
-                color: this.selectedColor,
-                thickness: Number(this.thickness),
-                id: shapeId
-            };
-        } else if (this.selectedTool === "arrow") {
-            shape = {
-                type: "arrow",
-                StartX: this.startX,
-                StartY: this.startY,
-                width: currentX - this.startX,
-                height: currentY - this.startY,
-                color: this.selectedColor,
-                thickness: Number(this.thickness),
-                id: shapeId
-            };
-        } else if (this.selectedTool === "pen") {
-            shape = {
-                type: "pen",
-                points: [...this.currentPenPoints],
-                color: this.selectedColor,
-                thickness: Number(this.thickness),
-                id: shapeId
-            };
-        } else if (this.selectedTool === "eraser") {
-            // Reset the composition mode after erasing
-            this.ctx.restore();
-            
-            // For eraser, we'll analyze the erased area
-            this.analyzeErasedArea();
-            return; // Exit early as we handle erasing differently
+        switch (this.selectedTool) {
+            case "rectangle":
+                shape = {
+                    type: "rect",
+                    StartX: this.startX,
+                    StartY: this.startY,
+                    width: currentX - this.startX,
+                    height: currentY - this.startY,
+                    color: this.selectedColor,
+                    thickness: Number(this.thickness),
+                    id: shapeId
+                };
+                break;
+            case "circle":
+                shape = {
+                    type: "circle",
+                    StartX: this.startX + (currentX - this.startX) / 2,
+                    StartY: this.startY + (currentY - this.startY) / 2,
+                    radius: distance / 2,
+                    color: this.selectedColor,
+                    thickness: Number(this.thickness),
+                    id: shapeId
+                };
+                if (shape.radius < 0) shape.radius = 0;
+                break;
+            case "line":
+                shape = {
+                    type: "line",
+                    StartX: this.startX,
+                    StartY: this.startY,
+                    width: currentX - this.startX,
+                    height: currentY - this.startY,
+                    color: this.selectedColor,
+                    thickness: Number(this.thickness),
+                    id: shapeId
+                };
+                break;
+            case "triangle":
+                shape = {
+                    type: "triangle",
+                    StartX: this.startX,
+                    StartY: this.startY,
+                    width: currentX - this.startX,
+                    height: currentY - this.startY,
+                    color: this.selectedColor,
+                    thickness: Number(this.thickness),
+                    id: shapeId
+                };
+                break;
+            case "arrow":
+                shape = {
+                    type: "arrow",
+                    StartX: this.startX,
+                    StartY: this.startY,
+                    width: currentX - this.startX,
+                    height: currentY - this.startY,
+                    color: this.selectedColor,
+                    thickness: Number(this.thickness),
+                    id: shapeId
+                };
+                break;
+            case "pen":
+                if (distance > 0) {
+                     this.currentPenPoints.push({ x: currentX, y: currentY });
+                }
+                if (this.currentPenPoints.length < 2) {
+                    this.clearCanvas();
+                    return;
+                }
+                shape = {
+                    type: "pen",
+                    points: [...this.currentPenPoints],
+                    color: this.selectedColor,
+                    thickness: Number(this.thickness),
+                    id: shapeId
+                };
+                this.currentPenPoints = [];
+                break;
         }
 
         if (!shape) {
+            this.clearCanvas();
             return;
         }
 
-        const data = JSON.stringify({
+        const messageData = JSON.stringify({ shape });
+        const socketData = JSON.stringify({
             type: "chat",
-            message: JSON.stringify({ shape }),
+            message: messageData,
             roomId: this.roomId
         });
 
-        this.socket.send(data);
-    }
-
-    analyzeErasedArea() {
-        // Get the current state of the canvas
-        const imgData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
-        const gap = 10; // Sampling gap
-        let erasedCount = 0;
-        let totalCount = 0;
-        
-        // Sample the canvas to detect erased areas
-        for (let x = 0; x < imgData.width; x += gap) {
-            for (let y = 0; y < imgData.height; y += gap) {
-                const i = (y * imgData.width + x) * 4;
-                totalCount++;
-                
-                // Check for transparent pixels (erased)
-                if (imgData.data[i + 3] === 0) {
-                    erasedCount++;
-                }
-            }
-        }
-        
-        // If a significant portion has been erased, create an eraser action
-        if (erasedCount / totalCount > 0.1) {
-            const shape: shapes = {
-                type: "eraser",
-                targetIds: []  // Since this is a composite-based eraser, we don't target specific shapes
-            };
-            
-            const data = JSON.stringify({
-                type: "chat",
-                message: JSON.stringify({ shape }),
-                roomId: this.roomId
-            });
-            
-            this.socket.send(data);
-        }
-        
-        // Redraw the canvas to update the visual state
-        this.clearCanvas();
+        this.socket.send(socketData);
+        console.log(`Sent shape: ${shape.type}, ID: ${shape.id}`);
     }
 
     mouseMoveHandler = (e: MouseEvent | TouchEvent) => {
-        if (!this.clicked) return;
+        if (!this.drawing) return;
         
-        // Get current position from event
-        let currentX: number, currentY: number;
+        const pos = this.getEventPosition(e);
+        let currentX = pos.x;
+        let currentY = pos.y;
+        
         if ('touches' in e) {
-            currentX = e.touches[0].clientX;
-            currentY = e.touches[0].clientY;
-            
-            // Prevent scrolling when drawing
             e.preventDefault();
-        } else {
-            currentX = e.clientX;
-            currentY = e.clientY;
         }
-        
-        const width: number = currentX - this.startX;
-        const height: number = currentY - this.startY;
-        const radius: number = Math.sqrt((currentX - this.startX) ** 2 + (currentY - this.startY) ** 2);
         
         if (this.selectedTool === "eraser") {
-            // For eraser, continuously draw in "destination-out" mode
-            if (this.drawing) {
-                this.ctx.lineTo(currentX, currentY);
-                this.ctx.stroke();
-                
-                // Save last position for smoother lines
-                this.lastX = currentX;
-                this.lastY = currentY;
-            }
+            this.checkEraserIntersection(currentX, currentY);
+            this.clearCanvas();
+            this.drawEraserCursor(currentX, currentY);
             return;
         }
-        
-        // For other tools, preview the shape
-            this.clearCanvas();
-            this.ctx.strokeStyle = this.selectedColor;
 
-            switch (this.selectedTool) {
-                case "rectangle":
-                    this.ctx.lineWidth = Number(this.thickness);
-                    this.ctx.strokeRect(this.startX, this.startY, width, height);
-                    break;
-                case "circle":
-                    this.ctx.beginPath();
-                    this.ctx.lineWidth = Number(this.thickness);
-                    this.ctx.arc(this.startX, this.startY, radius, 0, 2 * Math.PI);
-                    this.ctx.stroke();
-                    break;
-                case "line":
-                    this.ctx.beginPath();
-                    this.ctx.lineWidth = Number(this.thickness);
-                    this.ctx.moveTo(this.startX, this.startY);
+        const width: number = currentX - this.startX;
+        const height: number = currentY - this.startY;
+        const radius: number = Math.sqrt(width ** 2 + height ** 2) / 2;
+        
+        this.clearCanvas();
+        this.ctx.strokeStyle = this.selectedColor;
+        this.ctx.lineWidth = Number(this.thickness);
+
+        switch (this.selectedTool) {
+            case "rectangle":
+                this.ctx.strokeRect(this.startX, this.startY, width, height);
+                break;
+            case "circle":
+                this.ctx.beginPath();
+                this.ctx.arc(this.startX + width / 2, this.startY + height / 2, radius, 0, 2 * Math.PI);
+                this.ctx.stroke();
+                break;
+            case "line":
+                this.ctx.beginPath();
+                this.ctx.moveTo(this.startX, this.startY);
                 this.ctx.lineTo(currentX, currentY);
-                    this.ctx.stroke();
-                    break;
-                case "triangle":
-                    this.ctx.beginPath();
-                    this.ctx.lineWidth = Number(this.thickness);
-                    
-                    // Draw from the starting point (fixed position)
-                    this.ctx.moveTo(this.startX, this.startY);
-                    this.ctx.lineTo(this.startX + width, this.startY);
-                    this.ctx.lineTo(this.startX + width/2, this.startY + height);
-                    this.ctx.closePath();
-                    this.ctx.stroke();
-                    break;
-                case "arrow":
-                    const headLength = Math.min(Math.abs(width), Math.abs(height)) / 4;
-                    const angle = Math.atan2(height, width);
-                    
-                    this.ctx.beginPath();
-                    this.ctx.lineWidth = Number(this.thickness);
-                    
-                    // Draw the line
-                    this.ctx.moveTo(this.startX, this.startY);
-                this.ctx.lineTo(currentX, currentY);
-                    
-                    // Draw the arrowhead
-                    this.ctx.lineTo(
-                    currentX - headLength * Math.cos(angle - Math.PI / 6),
-                    currentY - headLength * Math.sin(angle - Math.PI / 6)
-                    );
-                this.ctx.moveTo(currentX, currentY);
-                    this.ctx.lineTo(
-                    currentX - headLength * Math.cos(angle + Math.PI / 6),
-                    currentY - headLength * Math.sin(angle + Math.PI / 6)
-                    );
-                    
-                    this.ctx.stroke();
-                    break;
-                case "pen":
-                    if (!this.drawing) return;
-                    // Draw the current pen stroke
-                    this.ctx.beginPath();
-                    this.ctx.lineWidth = Number(this.thickness);
-                    this.ctx.moveTo(this.currentPenPoints[0].x, this.currentPenPoints[0].y);
-                    this.currentPenPoints.forEach(point => {
-                        this.ctx.lineTo(point.x, point.y);
-                    });
-                this.ctx.lineTo(currentX, currentY);
-                    this.ctx.stroke();
+                this.ctx.stroke();
+                break;
+            case "triangle":
+                this.ctx.beginPath();
+                this.ctx.moveTo(this.startX, this.startY);
+                this.ctx.lineTo(this.startX + width, this.startY + height);
+                this.ctx.lineTo(this.startX - width, this.startY + height);
+                this.ctx.closePath();
+                this.ctx.stroke();
+                break;
+            case "arrow":
+                this.drawArrow(this.startX, this.startY, currentX, currentY, this.selectedColor, Number(this.thickness));
+                break;
+            case "pen":
                 this.currentPenPoints.push({ x: currentX, y: currentY });
-                    break;
+                this.drawPenStroke(this.currentPenPoints, this.selectedColor, Number(this.thickness));
+                break;
         }
+        
+        this.lastX = currentX;
+        this.lastY = currentY;
+    }
+    
+    private getEventPosition(e: MouseEvent | TouchEvent): { x: number, y: number } {
+        const rect = this.canvas.getBoundingClientRect();
+        let clientX: number, clientY: number;
+
+        if ('touches' in e) {
+            if (e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.changedTouches[0].clientX;
+                clientY = e.changedTouches[0].clientY;
+            }
+        } else {
+            clientX = e.clientX;
+            clientY = e.clientY;
+        }
+        return {
+            x: clientX - rect.left,
+            y: clientY - rect.top
+        };
+    }
+    
+    private drawEraserCursor(x: number, y: number) {
+        const eraserRadius = 10;
+        this.ctx.save();
+        this.ctx.beginPath();
+        this.ctx.arc(x, y, eraserRadius, 0, Math.PI * 2);
+        this.ctx.strokeStyle = 'rgba(150, 150, 150, 0.8)';
+        this.ctx.lineWidth = 1;
+        this.ctx.stroke();
+        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        this.ctx.fill();
+        this.ctx.restore();
+    }
+
+    private drawArrow(fromX: number, fromY: number, toX: number, toY: number, color: string, thickness: number) {
+        const headLength = Math.max(10, thickness * 3);
+        const dx = toX - fromX;
+        const dy = toY - fromY;
+        const angle = Math.atan2(dy, dx);
+
+        this.ctx.save();
+        this.ctx.strokeStyle = color;
+        this.ctx.lineWidth = thickness;
+        this.ctx.lineCap = 'round';
+        this.ctx.lineJoin = 'round';
+
+        this.ctx.beginPath();
+        this.ctx.moveTo(fromX, fromY);
+        this.ctx.lineTo(toX, toY);
+
+        this.ctx.moveTo(toX, toY);
+        this.ctx.lineTo(toX - headLength * Math.cos(angle - Math.PI / 6), toY - headLength * Math.sin(angle - Math.PI / 6));
+        this.ctx.moveTo(toX, toY);
+        this.ctx.lineTo(toX - headLength * Math.cos(angle + Math.PI / 6), toY - headLength * Math.sin(angle + Math.PI / 6));
+        
+        this.ctx.stroke();
+        this.ctx.restore();
+    }
+
+    private drawPenStroke(points: { x: number, y: number }[], color: string, thickness: number) {
+        if (!points || points.length < 1) return;
+
+        this.ctx.save();
+        this.ctx.strokeStyle = color;
+        this.ctx.lineWidth = thickness;
+        this.ctx.lineCap = 'round';
+        this.ctx.lineJoin = 'round';
+
+        this.ctx.beginPath();
+        this.ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 1; i < points.length; i++) {
+            this.ctx.lineTo(points[i].x, points[i].y);
+        }
+        this.ctx.stroke();
+        this.ctx.restore();
     }
 
     initMouseHandlers() {
-        // Determine event types based on device support
         const tapstart = this.hasTouch ? 'touchstart' : 'mousedown';
         const tapmove = this.hasTouch ? 'touchmove' : 'mousemove';
         const tapend = this.hasTouch ? 'touchend' : 'mouseup';
         
-        // Remove old listeners if they exist
         this.canvas.removeEventListener("mousedown", this.mouseDownHandler);
         this.canvas.removeEventListener("mouseup", this.mouseUpHandler);
         this.canvas.removeEventListener("mousemove", this.mouseMoveHandler);
+        this.canvas.removeEventListener("mouseleave", this.mouseLeaveHandler);
         this.canvas.removeEventListener("touchstart", this.mouseDownHandler);
         this.canvas.removeEventListener("touchend", this.mouseUpHandler);
         this.canvas.removeEventListener("touchmove", this.mouseMoveHandler);
         
-        // Add new listeners
-        this.canvas.addEventListener(tapstart, this.mouseDownHandler);
+        this.canvas.addEventListener(tapstart, this.mouseDownHandler, { passive: false });
         this.canvas.addEventListener(tapend, this.mouseUpHandler);
-        this.canvas.addEventListener(tapmove, this.mouseMoveHandler);
+        this.canvas.addEventListener(tapmove, this.mouseMoveHandler, { passive: false });
         
-        // Add a listener to handle mouse leaving the canvas
-        this.canvas.addEventListener("mouseleave", () => {
-            if (this.clicked) {
-                this.mouseUpHandler(new MouseEvent('mouseup', {
-                    clientX: this.lastX,
-                    clientY: this.lastY
-                }));
+        this.canvas.addEventListener("mouseleave", this.mouseLeaveHandler);
+    }
+    
+    mouseLeaveHandler = () => {
+         if (this.drawing) {
+            this.mouseUpHandler(new MouseEvent('mouseup', {
+                clientX: this.lastX + this.canvas.getBoundingClientRect().left,
+                clientY: this.lastY + this.canvas.getBoundingClientRect().top
+            }));
+        }
+    }
+
+    clearAll() {
+        const allShapeIds = this.existingShapes
+            .filter(shape => shape.type !== 'eraser')
+            .map(shape => shape.id);
+
+        if (allShapeIds.length > 0) {
+             const shape: shapes = {
+                type: "eraser",
+                targetIds: allShapeIds
+            };
+            const messageData = JSON.stringify({ shape });
+            const socketData = JSON.stringify({
+                type: "chat",
+                message: messageData,
+                roomId: this.roomId
+            });
+            this.socket.send(socketData);
+            console.log("Sent clearAll (eraser) message for IDs:", shape.targetIds);
+
+            deleteShapes(this.roomId, allShapeIds);
+            
+        } else {
+             console.log("ClearAll called, but no shapes to clear.");
+             this.clearCanvas();
+        }
+    }
+
+    private checkEraserIntersection(eraserX: number, eraserY: number) {
+        const eraserRadius = 10;
+
+        this.existingShapes.forEach(shape => {
+            if (shape.type === 'eraser' || this.shapesToErase.has(shape.id)) {
+                return;
+            }
+
+            let intersects = false;
+            switch (shape.type) {
+                case 'rect':
+                    intersects = this.isPointNearRect(eraserX, eraserY, shape, eraserRadius);
+                    break;
+                case 'circle':
+                    intersects = this.isPointNearCircle(eraserX, eraserY, shape, eraserRadius);
+                    break;
+                case 'line':
+                case 'arrow':
+                    intersects = this.isPointNearLine(eraserX, eraserY, shape, eraserRadius);
+                    break;
+                case 'triangle':
+                     intersects = this.isPointNearTriangle(eraserX, eraserY, shape, eraserRadius);
+                    break;
+                case 'pen':
+                    intersects = this.isPointNearPenStroke(eraserX, eraserY, shape, eraserRadius);
+                    break;
+            }
+
+            if (intersects) {
+                this.shapesToErase.add(shape.id);
+                console.log(`Marked shape ${shape.id} (${shape.type}) for erasure.`);
             }
         });
     }
     
-    // Update the eraser size
-    setEraserSize(size: number) {
-        this.eraserLineWidth = size;
+    private isPointNearRect(px: number, py: number, rect: Extract<shapes, { type: 'rect' }>, tolerance: number): boolean {
+        const halfThickness = rect.thickness / 2 + tolerance;
+        const x1 = Math.min(rect.StartX, rect.StartX + rect.width);
+        const y1 = Math.min(rect.StartY, rect.StartY + rect.height);
+        const x2 = Math.max(rect.StartX, rect.StartX + rect.width);
+        const y2 = Math.max(rect.StartY, rect.StartY + rect.height);
+
+        const isInsideOuter = px >= x1 - halfThickness && px <= x2 + halfThickness &&
+                              py >= y1 - halfThickness && py <= y2 + halfThickness;
+                              
+        const isOutsideInner = px <= x1 + halfThickness || px >= x2 - halfThickness ||
+                               py <= y1 + halfThickness || py >= y2 - halfThickness;
+
+        return isInsideOuter && isOutsideInner;
     }
 
-    clearAll() {
-        // Clear all shapes but keep the background color
-        this.existingShapes = [];
-        this.clearCanvas();
+    private isPointNearCircle(px: number, py: number, circle: Extract<shapes, { type: 'circle' }>, tolerance: number): boolean {
+        const distSq = (px - circle.StartX) ** 2 + (py - circle.StartY) ** 2;
+        const outerRadiusSq = (circle.radius + circle.thickness / 2 + tolerance) ** 2;
+        const innerRadiusSq = Math.max(0, circle.radius - circle.thickness / 2 - tolerance) ** 2;
+        return distSq <= outerRadiusSq && distSq >= innerRadiusSq;
     }
+
+    private isPointNearLine(px: number, py: number, line: Extract<shapes, { type: 'line' | 'arrow' }>, tolerance: number): boolean {
+        const x1 = line.StartX;
+        const y1 = line.StartY;
+        const x2 = line.StartX + line.width;
+        const y2 = line.StartY + line.height;
+        const distSq = this.distToSegmentSquared(px, py, x1, y1, x2, y2);
+        const maxDistSq = (line.thickness / 2 + tolerance) ** 2;
+        return distSq <= maxDistSq;
+    }
+
+    private isPointNearTriangle(px: number, py: number, triangle: Extract<shapes, { type: 'triangle' }>, tolerance: number): boolean {
+        const p1 = { x: triangle.StartX, y: triangle.StartY };
+        const p2 = { x: triangle.StartX + triangle.width, y: triangle.StartY + triangle.height };
+        const p3 = { x: triangle.StartX - triangle.width, y: triangle.StartY + triangle.height };
+
+        const thresholdSq = (triangle.thickness / 2 + tolerance) ** 2;
+
+        return (
+            this.distToSegmentSquared(px, py, p1.x, p1.y, p2.x, p2.y) <= thresholdSq ||
+            this.distToSegmentSquared(px, py, p2.x, p2.y, p3.x, p3.y) <= thresholdSq ||
+            this.distToSegmentSquared(px, py, p3.x, p3.y, p1.x, p1.y) <= thresholdSq
+        );
+    }
+    
+    private isPointNearPenStroke(px: number, py: number, pen: Extract<shapes, { type: 'pen' }>, tolerance: number): boolean {
+        if (!pen.points || pen.points.length < 2) return false;
+        const thresholdSq = (pen.thickness / 2 + tolerance) ** 2;
+
+        for (let i = 0; i < pen.points.length - 1; i++) {
+            const p1 = pen.points[i];
+            const p2 = pen.points[i + 1];
+            if (this.distToSegmentSquared(px, py, p1.x, p1.y, p2.x, p2.y) <= thresholdSq) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private distToSegmentSquared(px: number, py: number, x1: number, y1: number, x2: number, y2: number): number {
+        const l2 = (x2 - x1) ** 2 + (y2 - y1) ** 2;
+        if (l2 === 0) return (px - x1) ** 2 + (py - y1) ** 2;
+        let t = ((px - x1) * (x2 - x1) + (py - y1) * (y2 - y1)) / l2;
+        t = Math.max(0, Math.min(1, t));
+        const projX = x1 + t * (x2 - x1);
+        const projY = y1 + t * (y2 - y1);
+        return (px - projX) ** 2 + (py - projY) ** 2;
+    }
+
 }
 

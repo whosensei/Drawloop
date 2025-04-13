@@ -607,7 +607,7 @@ export default function DrawingToolbar({
             <div className="flex items-start gap-2 text-sm">
               <LockIcon size={16} className="mt-0.5 text-amber-500 shrink-0" />
               <p className={theme === "light" ? "text-gray-600" : "text-gray-300"}>
-                The upload has been secured with end-to-end encryption, which means that draww.io server and third
+                The upload has been secured with end-to-end encryption, which means that Drawloop server and third
                 parties can't read the content.
               </p>
             </div>

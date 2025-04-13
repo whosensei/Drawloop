@@ -319,7 +319,7 @@ export default function Dashboard() {
       <header className="border-b border-white/10 relative z-10">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-300 via-white/90 to-rose-300">
-            Sketch Board
+          Drawloop
           </h1>
           <div className="flex items-center gap-4">
             <Toggle />
