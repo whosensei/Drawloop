@@ -451,8 +451,8 @@ export class Game {
                 case "triangle":
                     this.ctx.beginPath();
                     this.ctx.moveTo(this.startX, this.startY);
-                this.ctx.lineTo(this.startX + width, this.startY + height);
-                this.ctx.lineTo(this.startX - width, this.startY + height);
+                    this.ctx.lineTo(this.startX + width, this.startY);
+                    this.ctx.lineTo(this.startX + width/2, this.startY + height);
                     this.ctx.closePath();
                     this.ctx.stroke();
                     break;
