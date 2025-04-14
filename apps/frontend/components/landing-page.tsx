@@ -28,8 +28,10 @@ export default function LandingPage() {
   const handleNavigation = (path: "signin" | "signup") => {
     setIsNavigating(true)
     setNavigateTo(path)
+    const targetUrl = path
+    
     setTimeout(() => {
-      window.location.href = `/${path}`
+      window.location.href = targetUrl;
     }, 500)
   }
 

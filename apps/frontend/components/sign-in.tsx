@@ -108,7 +108,12 @@ export default function SignIn() {
                     
                     // Only redirect after successful authentication
                     setTimeout(() => {
-                        window.location.href = redirectUrl || "/dashboard"
+                        // If there's a redirect URL, go there, otherwise go to dashboard
+                        if (redirectUrl) {
+                            window.location.href = redirectUrl;
+                        } else {
+                            window.location.href = "/dashboard";
+                        }
                     }, 1000)
                 }
             } catch(error) {
@@ -260,7 +265,10 @@ export default function SignIn() {
                 >
                     <p className="text-white/40 text-sm">
                         Don't have an account?{" "}
-                        <Link href="/signup" className="text-indigo-400 hover:text-indigo-300 transition-colors">
+                        <Link 
+                            href={redirectUrl ? `/signup?redirectUrl=${encodeURIComponent(redirectUrl)}` : "/signup"} 
+                            className="text-indigo-400 hover:text-indigo-300 transition-colors"
+                        >
                             Sign Up
                         </Link>
                     </p>

@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import Link from "next/link"
 import Image from "next/image"
@@ -19,14 +19,24 @@ import { User} from "@repo/db/schema";
 import axios from "axios"
 
 
-
 export default function SignUp() {
     const [showPassword, setShowPassword] = useState(false)
     const [email, setEmail] = useState("")
     const [username, setUsername] = useState("")
     const [password, setPassword] = useState("")
     const [isLoading, setIsLoading] = useState(false)
+    const [redirectUrl, setRedirectUrl] = useState("")
     const { toast } = useToast()
+
+    // Read URL parameters on component mount
+    useEffect(() => {
+        const queryParams = new URLSearchParams(window.location.search);
+        const redirectParam = queryParams.get('redirectUrl');
+        
+        if (redirectParam) {
+            setRedirectUrl(redirectParam);
+        }
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -49,6 +59,39 @@ export default function SignUp() {
                         title: message.data.message,
                         description: "Welcome draww.io.",
                       })
+                      
+                      // After successful signup, automatically sign in the user
+                      try {
+                        const signInResponse = await axios.post(`${process.env.NEXT_PUBLIC_HTTP_BACKEND}/signin`, {
+                          email: email,
+                          password: password
+                        });
+                        
+                        if (signInResponse.status === 200) {
+                          const token = signInResponse.data.token;
+                          localStorage.setItem("token", token);
+                          
+                          // Redirect to the redirect URL if available, otherwise to dashboard
+                          setTimeout(() => {
+                            // If there's a redirect URL, go there, otherwise go to dashboard
+                            if (redirectUrl) {
+                              window.location.href = redirectUrl;
+                            } else {
+                              window.location.href = "/dashboard";
+                            }
+                          }, 1000);
+                        }
+                      } catch (signInError) {
+                        console.error("Auto sign-in failed:", signInError);
+                        // If auto sign-in fails, redirect to sign-in page with the redirect URL
+                        setTimeout(() => {
+                          if (redirectUrl) {
+                            window.location.href = `/signin?redirectUrl=${encodeURIComponent(redirectUrl)}`;
+                          } else {
+                            window.location.href = "/signin";
+                          }
+                        }, 1000);
+                      }
                     }
             }catch(error){
                 if (axios.isAxiosError(error)) {
@@ -73,7 +116,6 @@ export default function SignUp() {
             } finally {
                 setIsLoading(false)
             }
-            // window.location.href = "/dashboard"
         }, 1000)
     }
 
@@ -205,7 +247,10 @@ export default function SignUp() {
                 >
                     <p className="text-white/40 text-sm">
                         Already have an account?{" "}
-                        <Link href="/signin" className="text-indigo-400 hover:text-indigo-300 transition-colors">
+                        <Link 
+                            href={redirectUrl ? `/signin?redirectUrl=${encodeURIComponent(redirectUrl)}` : "/signin"} 
+                            className="text-indigo-400 hover:text-indigo-300 transition-colors"
+                        >
                             Sign In
                         </Link>
                     </p>
