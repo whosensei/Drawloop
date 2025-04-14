@@ -6,6 +6,11 @@ import { db } from "@repo/db";
 import { User, Room, chats, userRooms } from "@repo/db/schema";
 import middleware from "./middleware";
 import { eq, desc, inArray, and } from "drizzle-orm";
+import * as dotenv from "dotenv";
+import path from "path";
+
+dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
+
 const app = express();
 import cors from "cors"
 import { log } from "console";

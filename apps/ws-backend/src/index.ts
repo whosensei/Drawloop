@@ -3,6 +3,11 @@ import jwt from "jsonwebtoken";
 import {JWT_SECRET} from "@repo/backend-common/config";
 import { db } from "@repo/db";
 import { chats } from "@repo/db/schema";
+import * as dotenv from "dotenv";
+import path from "path";
+
+// Load environment variables from the root .env file
+dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
 
 const wss = new WebSocketServer({port:8080});
 
