@@ -578,7 +578,7 @@ export default function DrawingToolbar({
               )}>Link</p>
               <div className="flex gap-2">
                 <Input
-                  value={`http://localhost:3000/canvas/${roomId}`}
+                  value={window.location.href}
                   readOnly
                   className={cn(
                     "flex-1",
@@ -594,7 +594,7 @@ export default function DrawingToolbar({
                     ? "bg-indigo-100 text-indigo-600 hover:bg-indigo-200"
                     : "bg-indigo-600 text-white hover:bg-indigo-700",
                   )}
-                  onClick={() => copyToClipboard(`http://localhost:3000/canvas/${roomId}`)}
+                  onClick={() => copyToClipboard(window.location.href)}
                 >
                   <Copy size={16} className="mr-2" />
                   Copy link
