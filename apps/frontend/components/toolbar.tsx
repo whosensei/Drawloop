@@ -212,7 +212,7 @@ export default function DrawingToolbar({
               </button>
             </TooltipTrigger>
             <TooltipContent>
-              <p className="text-xs">Lock Canvas</p>\\\
+              <p className="text-xs">Lock Canvas</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
