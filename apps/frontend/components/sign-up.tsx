@@ -6,7 +6,7 @@ import { useState } from "react"
 import { motion } from "framer-motion"
 import Link from "next/link"
 import Image from "next/image"
-import { ArrowLeft, Eye, EyeOff } from "lucide-react"
+import { ArrowLeft, Eye, EyeOff, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -184,7 +184,14 @@ export default function SignUp() {
                                 isLoading && "opacity-70 cursor-not-allowed",
                             )}
                         >
-                            {isLoading ? "Creating account..." : "Sign Up"}
+                            {isLoading ? (
+                                <>
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    Creating account...
+                                </>
+                            ) : (
+                                "Sign Up"
+                            )}
                         </Button>
                     </form>
                 </motion.div>

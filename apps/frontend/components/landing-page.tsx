@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button"
 // import { ModeToggle } from "@/components/mode-toggle"
 import { ElegantShape } from "@/components/elegant-shape"
 import { useTheme } from "@/components/theme-toggle"
+import { useState } from "react"
+import { ArrowRight, Loader2 } from "lucide-react"
 
 const pacifico = Pacifico({
   subsets: ["latin"],
@@ -20,6 +22,17 @@ const pacifico = Pacifico({
 
 export default function LandingPage() {
   const { theme } = useTheme()
+  const [isNavigating, setIsNavigating] = useState(false)
+  const [navigateTo, setNavigateTo] = useState<"signin" | "signup" | null>(null)
+
+  const handleNavigation = (path: "signin" | "signup") => {
+    setIsNavigating(true)
+    setNavigateTo(path)
+    setTimeout(() => {
+      window.location.href = `/${path}`
+    }, 500)
+  }
+
   const fadeUpVariants = {
     hidden: { opacity: 0, y: 30 },
     visible: (i: number) => ({
@@ -133,18 +146,34 @@ export default function LandingPage() {
             className="flex flex-wrap justify-center gap-4 mb-12"
           >
             <Button
-              asChild
               size="lg"
               className="bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white border-none"
+              onClick={() => handleNavigation("signin")}
+              disabled={isNavigating}
             >
-              <Link href="/signin">Sign In</Link>
+              {isNavigating && navigateTo === "signin" ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                "Sign In"
+              )}
             </Button>
             <Button 
-              asChild 
               size="lg"
               className="bg-white/10 text-white hover:bg-white/20 border border-white/10"
+              onClick={() => handleNavigation("signup")}
+              disabled={isNavigating}
             >
-              <Link href="/signup">Sign Up</Link>
+              {isNavigating && navigateTo === "signup" ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Signing up...
+                </>
+              ) : (
+                "Sign Up"
+              )}
             </Button>
           </motion.div>
         </div>
