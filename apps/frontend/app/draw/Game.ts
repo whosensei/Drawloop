@@ -593,10 +593,9 @@ export class Game {
                 roomId: this.roomId
             });
             this.socket.send(socketData);
-            deleteShapes(this.roomId, allShapeIds);
-        } else {
-            this.clearCanvas();
         }
+        
+        this.clearCanvas();
     }
 
     private checkEraserIntersection(eraserX: number, eraserY: number) {

@@ -20,7 +20,6 @@ export async function deleteShapes(roomId: string, shapeIds: string[]) {
     try {
         await axios.delete(`${process.env.NEXT_PUBLIC_HTTP_BACKEND!}/shapes`, {
             data: { roomId, shapeIds }, // Send data in the body for DELETE request
-            // No auth headers needed as middleware was removed
         });
     } catch (error) {
         console.error("Failed to delete shapes:", error);
