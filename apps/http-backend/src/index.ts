@@ -17,7 +17,7 @@ import { log } from "console";
 
 app.use(express.json());
 app.use(cors({
-  origin: ['http://localhost:3000'],
+  origin: ['https://drawloop.onrender.com'],
   credentials: true
 }));
 
