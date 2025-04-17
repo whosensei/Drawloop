@@ -31,6 +31,18 @@ app.post("/signup", async (req: Request, res: Response) => {
     return;
   }
   try {
+
+    const result = await db.query.User.findFirst({
+      where: eq(User.email,parsedData.data.email)
+    })
+    
+    if(result){
+      res.status(409).json({
+        message:"email already exists"
+      })
+      return;
+    }
+    
     await db.insert(User).values({
       email: parsedData.data.email,
       username: parsedData.data.username,
@@ -45,7 +57,7 @@ app.post("/signup", async (req: Request, res: Response) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({
-      message: "Internal server error",
+      message: "error",
     });
   }
 });
