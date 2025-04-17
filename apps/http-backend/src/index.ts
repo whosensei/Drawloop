@@ -342,15 +342,12 @@ app.delete("/shapes", async (req: Request, res: Response) => {
        return;
     }
 
-    // 1. Fetch all chat entries for the room
     const roomChats = await db.select().from(chats).where(eq(chats.roomId, parsedRoomId));
 
-    // 2. Identify chat IDs containing the shapes to delete
     const chatIdsToDelete: number[] = [];
     roomChats.forEach(chat => {
       try {
         const messageContent = JSON.parse(chat.message);
-        // Check if the message structure is as expected and contains a shape with an ID
         if (messageContent && messageContent.shape && messageContent.shape.id && shapeIds.includes(messageContent.shape.id)) {
            if(chat.id) { 
              chatIdsToDelete.push(chat.id);
@@ -361,7 +358,6 @@ app.delete("/shapes", async (req: Request, res: Response) => {
       }
     });
 
-    // 3. Delete the identified chat entries
     if (chatIdsToDelete.length > 0) {
       try {
         await db.delete(chats).where(inArray(chats.id, chatIdsToDelete));
@@ -380,7 +376,7 @@ app.delete("/shapes", async (req: Request, res: Response) => {
   }
 });
 
-app.listen(3002, () => {
+app.listen(3002, '0.0.0.0',()=>{
   console.log("server started on port 3002");
 });
 
