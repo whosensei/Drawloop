@@ -14,7 +14,6 @@ import {
   Eraser,
   Copy,
   Link,
-  Play,
   LockIcon,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -92,32 +91,42 @@ export default function DrawingToolbar({
     "#d946ef", // fuchsia
   ]
 
+  const bgcolorOptions = [
+    "#e8f4f8",
+    "#f0f0f5", 
+    "#f5f0e8",     
+    "#f0e8f4",
+    "#e8f0e8",
+    "#bcd3eb",
+    "#1a1a1a", 
+    "#0d161f", 
+    "#180f1f", 
+    "#0f1c16",
+    "#1b1615",
+    "#0c1414"
+  ]
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      // Load stored color preference for stroke
       const storedColor = localStorage.getItem('selectedColor');
       if (storedColor && storedColor !== selectedColor) {
         setSelectedColor(storedColor);
       }
       
-      // Load stored color preference for background
       const storedBgColor = localStorage.getItem('selectedbgColor');
       if (storedBgColor && storedBgColor !== selectedbgColor) {
         setSelectedbgColor(storedBgColor);
       }
       
-      // Load stored thickness preference with default of 4
       const storedThickness = localStorage.getItem('thickness');
       if (storedThickness && storedThickness !== thickness) {
         setThickness(storedThickness);
       } else if (!storedThickness) {
-        // Set default thickness if none is stored
         setThickness("4");
       }
     }
   }, []);
 
-  // Save preferences to localStorage when they change
   useEffect(() => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('selectedColor', selectedColor);
@@ -150,7 +159,7 @@ export default function DrawingToolbar({
         description: "Please try again",
       })
     } finally {
-      // Use setTimeout to ensure the UI updates before clearing the flag
+
       setTimeout(() => {
         setclear(false)
       }, 100)
@@ -189,7 +198,7 @@ export default function DrawingToolbar({
             : "bg-[#2e2d39] border border-gray-800 shadow-black/30",
         )}
       >
-        {/* Lock Tool - Separated as independent entity */}
+        
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -354,7 +363,7 @@ export default function DrawingToolbar({
                 </TabsTrigger>
               </TabsList>
               <TabsContent value="preset" className="grid grid-cols-6 gap-1">
-                {colorOptions.map((color) => (
+                {bgcolorOptions.map((color) => (
                   <button
                     key={color}
                     className={cn(
