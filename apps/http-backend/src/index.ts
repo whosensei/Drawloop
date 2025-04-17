@@ -376,7 +376,7 @@ app.delete("/shapes", async (req: Request, res: Response) => {
   }
 });
 
-app.listen(3002, '0.0.0.0',()=>{
-  console.log("server started on port 3002");
+const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server listening on port ${PORT}`);
 });
-
