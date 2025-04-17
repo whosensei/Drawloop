@@ -1,0 +1,40 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Graph</title>
+</head>
+<body>
+  <script src="https://cdn.jsdelivr.net/npm/viz.js@2.1.2-pre.1/viz.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/viz.js@2.1.2-pre.1/full.render.js"></script>
+  <script>
+const s = `
+digraph {
+	compound = "true"
+	newrank = "true"
+	subgraph "root" {
+		"[root] @repo/backend-common#build" -> "[root] @repo/typescript-config#build"
+		"[root] @repo/common#build" -> "[root] @repo/typescript-config#build"
+		"[root] @repo/db#build" -> "[root] @repo/typescript-config#build"
+		"[root] @repo/eslint-config#build" -> "[root] ___ROOT___"
+		"[root] @repo/typescript-config#build" -> "[root] ___ROOT___"
+		"[root] @repo/ui#build" -> "[root] @repo/eslint-config#build"
+		"[root] @repo/ui#build" -> "[root] @repo/typescript-config#build"
+		"[root] frontend#build" -> "[root] @repo/backend-common#build"
+		"[root] frontend#build" -> "[root] @repo/common#build"
+		"[root] frontend#build" -> "[root] @repo/db#build"
+		"[root] http-backend#build" -> "[root] @repo/backend-common#build"
+		"[root] http-backend#build" -> "[root] @repo/common#build"
+		"[root] http-backend#build" -> "[root] @repo/db#build"
+		"[root] http-backend#build" -> "[root] @repo/typescript-config#build"
+		"[root] ws-backend#build" -> "[root] @repo/backend-common#build"
+		"[root] ws-backend#build" -> "[root] @repo/db#build"
+		"[root] ws-backend#build" -> "[root] @repo/typescript-config#build"
+	}
+}
+
+`.replace(/\_\_\_ROOT\_\_\_/g, "Root").replace(/\[root\]/g, "");new Viz().renderSVGElement(s).then(el => document.body.appendChild(el)).catch(e => console.error(e));
+  </script>
+</body>
+</html>

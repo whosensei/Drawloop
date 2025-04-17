@@ -57,7 +57,7 @@ export default function SignUp() {
                     toast({
                         variant: "success",
                         title: message.data.message,
-                        description: "Welcome draww.io.",
+                        description: "Welcome to Drawloop",
                       })
                       
                       // After successful signup, automatically sign in the user

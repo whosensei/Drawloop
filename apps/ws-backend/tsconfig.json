@@ -4,7 +4,9 @@
         "rootDir": "./src",
         "outDir": "./dist",
         "declaration": true,
-        "skipLibCheck": true
+        "skipLibCheck": true,
+        "noEmit": false,
+        "allowImportingTsExtensions": false
     },
         "include": [
             "src/**/*"

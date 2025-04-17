@@ -1,7 +1,7 @@
 import { neon, neonConfig } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 import * as dotenv from "dotenv";
-import * as schema from "./schema.ts";
+import * as schema from "./schema";
 neonConfig.fetchConnectionCache = true 
 
 // Load environment variables from the root .env file
