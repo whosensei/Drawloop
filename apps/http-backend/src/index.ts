@@ -8,16 +8,17 @@ import middleware from "./middleware";
 import { eq, desc, inArray, and } from "drizzle-orm";
 import * as dotenv from "dotenv";
 import path from "path";
+import cors from "cors"
+import { log } from "console";
 
 dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
 
 const app = express();
-import cors from "cors"
-import { log } from "console";
 
 app.use(express.json());
 app.use(cors({
   origin: ['https://drawloop.onrender.com'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   credentials: true
 }));
 
