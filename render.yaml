@@ -1,0 +1,48 @@
+services:
+  # HTTP Backend
+  - type: web
+    name: drawloop-http
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: cd apps/http-backend && npm start
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        fromEnv: JWT_SECRET
+      - key: NEXT_PUBLIC_DATABASE_URL
+        fromEnv: NEXT_PUBLIC_DATABASE_URL
+
+  # WebSocket Backend
+  - type: web
+    name: drawloop-ws
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: cd apps/ws-backend && npm start
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        fromEnv: JWT_SECRET
+      - key: NEXT_PUBLIC_DATABASE_URL
+        fromEnv: NEXT_PUBLIC_DATABASE_URL
+
+  # Frontend
+  - type: web
+    name: drawloop-frontend
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: cd apps/frontend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_HTTP_BACKEND
+        value: https://drawloop-http.onrender.com
+      - key: NEXT_PUBLIC_WS_URL
+        value: wss://drawloop-ws.onrender.com
+      - key: NEXT_PUBLIC_DATABASE_URL
+        fromEnv: NEXT_PUBLIC_DATABASE_URL

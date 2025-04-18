@@ -9,7 +9,8 @@ import path from "path";
 // Load environment variables from the root .env file
 dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
 
-const wss = new WebSocketServer({port:8080});
+const PORT = process.env.PORT ? parseInt(process.env.PORT) : 8080;
+const wss = new WebSocketServer({port: PORT});
 
 interface User {
     ws :WebSocket,
