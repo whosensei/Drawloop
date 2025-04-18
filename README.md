@@ -16,10 +16,14 @@ This Turborepo includes the following packages/apps:
 
 ### Apps and Packages
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
+- `frontend`: a [Next.js](https://nextjs.org/) app
+- `http-backend`: Express.js HTTP API server
+- `ws-backend`: WebSocket server
+- `@repo/ui`: a React component library shared by the applications
+- `@repo/db`: database schema and utilities
+- `@repo/backend-common`: shared utilities for backend services
+- `@repo/common`: shared utilities for all services
+- `@repo/eslint-config`: `eslint` configurations
 - `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
 
 Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
@@ -37,8 +41,41 @@ This Turborepo has some additional tools already setup for you:
 To build all apps and packages, run the following command:
 
 ```
-cd my-turborepo
 pnpm build
+```
+
+To build individual services:
+
+```
+# Build the frontend
+pnpm build:frontend
+
+# Build the HTTP backend
+pnpm build:http-backend
+
+# Build the WebSocket backend
+pnpm build:ws-backend
+```
+
+### Start
+
+To start all services in parallel, run:
+
+```
+pnpm start
+```
+
+To start individual services:
+
+```
+# Start the frontend
+pnpm start:frontend
+
+# Start the HTTP backend
+pnpm start:http-backend
+
+# Start the WebSocket backend
+pnpm start:ws-backend
 ```
 
 ### Develop
@@ -46,7 +83,6 @@ pnpm build
 To develop all apps and packages, run the following command:
 
 ```
-cd my-turborepo
 pnpm dev
 ```
 

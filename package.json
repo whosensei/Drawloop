@@ -3,8 +3,14 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
+    "build:frontend": "turbo run build --filter=frontend",
+    "build:http-backend": "turbo run build --filter=http-backend",
+    "build:ws-backend": "turbo run build --filter=ws-backend",
     "dev": "turbo run dev",
     "start": "turbo run start --parallel",
+    "start:frontend": "turbo run start --filter=frontend",
+    "start:http-backend": "turbo run start --filter=http-backend",
+    "start:ws-backend": "turbo run start --filter=ws-backend",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types"
