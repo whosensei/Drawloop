@@ -17,7 +17,7 @@ const app = express();
 
 app.use(express.json());
 app.use(cors({
-  origin: ['https://drawloop.onrender.com'],
+  origin: /*['https://drawloop.onrender.com']*/["http://localhost:3000"],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   credentials: true
 }));
@@ -373,6 +373,30 @@ app.delete("/shapes", async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error deleting shapes:", error);
     res.status(500).json({ message: "Failed to delete shapes due to a server error." });
+  }
+});
+
+app.delete("/demo-user-chats", async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.body;
+    
+    if (!userId) {
+      res.status(400).json({
+        message: "UserId is required"
+      });
+      return;
+    }  
+    // Delete all chats from these rooms created by this user
+    await db.delete(chats).where(eq(chats.userId, userId));
+    
+    res.status(200).json({
+      message: `Successfully cleared chats for demo user`
+    });
+  } catch (error) {
+    console.error("Error clearing demo user chats:", error);
+    res.status(500).json({
+      message: "Failed to clear demo user chats"
+    });
   }
 });
 
