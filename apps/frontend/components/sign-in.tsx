@@ -5,7 +5,6 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import Link from "next/link"
-import Image from "next/image"
 import { ArrowLeft, Eye, EyeOff, Info, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -14,7 +13,8 @@ import { Label } from "@/components/ui/label"
 import { Toggle } from "@/components/ui/toggle"
 import { useToast } from "@/components/ui/use-toast"
 import axios from "axios"
-// Add this new component for test credentials
+import { BackendNote } from "./ui/backendnote"
+
 function TestCredentials({ onUseTestAccount }: { onUseTestAccount: () => void }) {
     return (
         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm p-4 mb-6">
@@ -72,7 +72,6 @@ export default function SignIn() {
         // }
     }, []);
 
-    // Add this function to handle using test credentials
     const handleUseTestAccount = () => {
         setEmail("demo@sketchboard.com")
         setPassword("demo1234")
@@ -87,11 +86,9 @@ export default function SignIn() {
         e.preventDefault()
         setIsLoading(true)
 
-        // Simulate authentication delay
         setTimeout(async () => {
             setIsLoading(false)
 
-            // Show success toast
             try {
                 const res = await axios.post(`${process.env.NEXT_PUBLIC_HTTP_BACKEND}/signin`, {
                     email: email,
@@ -106,9 +103,7 @@ export default function SignIn() {
                         description: "Welcome back to Sketch Board.",
                     })
                     
-                    // Only redirect after successful authentication
                     setTimeout(() => {
-                        // If there's a redirect URL, go there, otherwise go to dashboard
                         if (redirectUrl) {
                             window.location.href = redirectUrl;
                         } else {
@@ -118,7 +113,6 @@ export default function SignIn() {
                 }
             } catch(error) {
                 if (axios.isAxiosError(error)) {
-                    // Get the error response data
                     const errorMessage = error.response?.data?.message || "Failed to sign in";
 
                     toast({
@@ -130,7 +124,6 @@ export default function SignIn() {
                     return
 
                 } else {
-                    // For non-axios errors
                     toast({
                         variant: "error",
                         title: "Something went wrong",
@@ -254,6 +247,7 @@ export default function SignIn() {
                             )}
                         </Button>
                     </form>
+                    <BackendNote />
                 </motion.div>
 
                 <motion.div

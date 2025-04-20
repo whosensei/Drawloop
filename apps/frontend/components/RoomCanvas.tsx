@@ -17,8 +17,6 @@ export default function RoomCanvas({roomId} :{roomId :string}){
         setIsClient(true);
     }, []);
 
-
-    // Use a consistent initial UI for both server and client
     if(!isClient || !socket){
         return <div>
             Connecting to server...

@@ -1,9 +1,7 @@
 "use client"
-import { useStyleRegistry } from "styled-jsx"
 import { toast } from "./ui/use-toast"
-import { use, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 
-// Original JoinRoom hook for use in components that need the socket
 
 export default function JoinRoom(roomId: string) {
     const [socket, setSocket] = useState<WebSocket | null>(null);
@@ -19,20 +17,16 @@ export default function JoinRoom(roomId: string) {
                 description:"Redirecting to Sign-in"
             })
             const current_url = window.location.href;
-            // setUrl(current_url);
             window.location.href = `/signin?redirectUrl=${encodeURIComponent(current_url)}`;
         
         }
 
         try {
-            // Create WebSocket connection with token for authentication
             const ws = new WebSocket(`${process.env.NEXT_PUBLIC_WS_URL}?token=${token}`);
 
-            // Handle connection open
             ws.onopen = () => {
                 setSocket(ws);
                 
-                // Send join message to the server
                 const joinMessage = JSON.stringify({
                     type: "join",
                     roomId: roomId
@@ -41,20 +35,17 @@ export default function JoinRoom(roomId: string) {
                 ws.send(joinMessage);
             };
 
-            // Handle errors
             ws.onerror = (error) => {
                 console.error("WebSocket error:", error);
             };
 
-            // Handle connection close
             ws.onclose = () => {
                 setSocket(null);
             };
 
-            // Cleanup on component unmount
             return () => {
                 if (ws.readyState === WebSocket.OPEN) {
-                    // Send leave message before closing
+     
                     const leaveMessage = JSON.stringify({
                         type: "leave",
                         roomId: roomId
@@ -81,12 +72,10 @@ export function createSocketConnection(roomId: string): Promise<WebSocket> {
         }
 
         try {
-            // Create WebSocket connection with token for authentication
             const ws = new WebSocket(`${process.env.NEXT_PUBLIC_WS_URL}?token=${token}`);
 
-            // Handle connection open
             ws.onopen = () => {
-                // Send join message to the server
+
                 const joinMessage = JSON.stringify({
                     type: "join",
                     roomId: roomId
@@ -96,13 +85,11 @@ export function createSocketConnection(roomId: string): Promise<WebSocket> {
                 resolve(ws);
             };
 
-            // Handle errors
             ws.onerror = (error) => {
                 console.error("WebSocket error:", error);
                 reject(error);
             };
 
-            // Handle connection close
             ws.onclose = () => {
                 console.log("WebSocket connection closed");
             };

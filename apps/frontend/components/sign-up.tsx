@@ -13,9 +13,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Toggle } from "@/components/ui/toggle"
 import { useToast } from "@/components/ui/use-toast"
-
-import { db , } from "@repo/db";
-import { User} from "@repo/db/schema";
+import { BackendNote } from "./ui/backendnote"
 import axios from "axios"
 
 
@@ -53,14 +51,12 @@ export default function SignUp() {
                 })
 
                 if(message.status === 200){
-                    // console.log(message.data)
                     toast({
                         variant: "success",
                         title: message.data.message,
                         description: "Welcome to Drawloop",
                       })
                       
-                      // After successful signup, automatically sign in the user
                       try {
                         const signInResponse = await axios.post(`${process.env.NEXT_PUBLIC_HTTP_BACKEND}/signin`, {
                           email: email,
@@ -71,9 +67,7 @@ export default function SignUp() {
                           const token = signInResponse.data.token;
                           localStorage.setItem("token", token);
                           
-                          // Redirect to the redirect URL if available, otherwise to dashboard
                           setTimeout(() => {
-                            // If there's a redirect URL, go there, otherwise go to dashboard
                             if (redirectUrl) {
                               window.location.href = redirectUrl;
                             } else {
@@ -83,7 +77,6 @@ export default function SignUp() {
                         }
                       } catch (signInError) {
                         console.error("Auto sign-in failed:", signInError);
-                        // If auto sign-in fails, redirect to sign-in page with the redirect URL
                         setTimeout(() => {
                           if (redirectUrl) {
                             window.location.href = `/signin?redirectUrl=${encodeURIComponent(redirectUrl)}`;
@@ -94,8 +87,15 @@ export default function SignUp() {
                       }
                     }
             }catch(error){
-                if (axios.isAxiosError(error)) {
-                    // Get the error response data
+
+                if(password.length<8){
+                    toast({
+                        variant: "error",
+                        title: "Signup Failed",
+                        description: "password should be minimum 8 characters",
+                    })
+                }
+                else if (axios.isAxiosError(error)) {
                     const errorMessage = error.response?.data?.message || "Failed to sign up";
 
                     toast({
@@ -105,7 +105,6 @@ export default function SignUp() {
                     })
                     
                 } else {
-                    // For non-axios errors
                     toast({
                         variant: "error",
                         title: "Something went wrong",
@@ -236,6 +235,7 @@ export default function SignUp() {
                             )}
                         </Button>
                     </form>
+                    <BackendNote />
                 </motion.div>
 
                 <motion.div

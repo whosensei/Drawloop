@@ -23,10 +23,6 @@ import { GetexistingRooms, Createroom, LeaveRoom } from "./getExistingRooms"
 import JoinRoom, { createSocketConnection } from "./joinRoom"
 
 
-// Define function to get rooms from backend
-
-
-// Room type from backend
 type Room = {
   id: number,
   name: string,
@@ -35,7 +31,6 @@ type Room = {
   members: number | null,
 }
 
-// Room type for UI with additional properties
 type UIRoom = {
   id: number,
   name: string,
@@ -44,10 +39,9 @@ type UIRoom = {
   color: string
 }
 
-// Initialize with empty array, will be populated in useEffect
 const initialRooms: Room[] = []
 
-// Claymorphic room card component
+
 function ClayRoomCard({
   room,
   onJoin,
@@ -57,7 +51,7 @@ function ClayRoomCard({
   onJoin: () => void
   onDelete: () => void
 }) {
-  // Color mapping for different card styles
+
   const colorMap: Record<string, { light: string; medium: string; dark: string }> = {
     indigo: {
       light: "from-indigo-400/20",
@@ -169,14 +163,11 @@ export default function Dashboard() {
     loadRooms()
   }, [refreshTrigger])
 
-  // Check if we're returning from a canvas page
+
   useEffect(() => {
-    // When component mounts, check if returning from canvas
     const isReturningFromCanvas = sessionStorage.getItem('returningFromCanvas');
     if (isReturningFromCanvas) {
-      // Clear the flag
       sessionStorage.removeItem('returningFromCanvas');
-      // Refresh rooms
       setRefreshTrigger(prev => prev + 1);
     }
   }, []);
@@ -191,7 +182,7 @@ export default function Dashboard() {
         });
         return;
       }
-        // Generate a random color from the available options
+
         const colors = ["indigo", "violet", "rose", "amber", "cyan"]
         const colorIndex = rooms.length % colors.length;
         const roomColor = colors[colorIndex];
@@ -231,7 +222,6 @@ export default function Dashboard() {
       await LeaveRoom(id);
       console.log(`Successfully left room ${id}`);
       
-      // Refresh the rooms list with latest data from server
       setRefreshTrigger(prev => prev + 1);
 
       toast({
@@ -278,12 +268,10 @@ export default function Dashboard() {
         throw new Error(data.message || "Failed to join room");
       }
 
-      // Establish WebSocket connection for the room
       try {
         await createSocketConnection(id);
       } catch (err) {
         console.warn("WebSocket connection could not be established. Will try again when entering the room.", err);
-        // Continue even if the WebSocket connection fails, as RoomCanvas will try again
       }
 
       toast({
@@ -293,7 +281,6 @@ export default function Dashboard() {
       });
       
       // Redirect to the canvas page with the room ID
-      // We use setTimeout to ensure the toast is shown before redirecting
       setTimeout(() => {
         window.location.href = `/canvas/${id}`;
       }, 1000);
@@ -307,7 +294,6 @@ export default function Dashboard() {
     }
   }
 
-  // Filter rooms based on search query
   const filteredRooms = searchQuery
     ? rooms.filter((room) => room.name.toLowerCase().includes(searchQuery.toLowerCase()))
     : rooms

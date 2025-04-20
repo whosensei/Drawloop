@@ -45,7 +45,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, [theme]);
 
   useEffect(() => {
-    // Update document theme if needed
     document.documentElement.classList.toggle("dark", theme === "dark");
   }, [theme]);
 
