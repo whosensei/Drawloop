@@ -1,5 +1,10 @@
+import AuthCheck from "@/components/authcheck"
 import Dashboard from "@/components/dashboard"
 
 export default function DashboardPage() {
-  return <Dashboard />
+  return (
+    <AuthCheck>
+      <Dashboard />
+    </AuthCheck>
+  )
 }
