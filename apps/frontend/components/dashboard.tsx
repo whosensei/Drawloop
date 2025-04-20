@@ -21,6 +21,7 @@ import axios from "axios"
 import { Room } from "@repo/db/schema"
 import { GetexistingRooms, Createroom, LeaveRoom } from "./getExistingRooms"
 import JoinRoom, { createSocketConnection } from "./joinRoom"
+import { BackendNote } from "./ui/backendnote"
 
 
 type Room = {
@@ -445,6 +446,7 @@ export default function Dashboard() {
           </motion.div>
         )}
       </main>
+      <BackendNote message="Join-room"/>
     </div>
   )
 }

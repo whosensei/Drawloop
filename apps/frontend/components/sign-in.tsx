@@ -247,7 +247,7 @@ export default function SignIn() {
                             )}
                         </Button>
                     </form>
-                    <BackendNote />
+                    <BackendNote message="Sign-in" />
                 </motion.div>
 
                 <motion.div
