@@ -17,7 +17,7 @@ const app = express();
 
 app.use(express.json());
 app.use(cors({
-  origin: /*['https://drawloop.onrender.com']*/["http://localhost:3000"],
+  origin: [process.env.NEXT_PUBLIC_FRONTEND_URL!],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   credentials: true
 }));
