@@ -446,7 +446,11 @@ export default function Dashboard() {
           </motion.div>
         )}
       </main>
-      <BackendNote message="Join-room"/>
+      <div className="fixed bottom-0 left-0 right-0 flex justify-center pb-6 z-10">
+        <div className="max-w-md mx-auto">
+          <BackendNote message="Join-room"/>
+        </div>
+      </div>
     </div>
   )
 }
