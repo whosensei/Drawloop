@@ -16,9 +16,13 @@ const nextConfig: NextConfig = {
   // Explicitly define environment variables to be exposed to the browser
   env: {
     NEXT_PUBLIC_WS_URL: process.env.NEXT_PUBLIC_WS_URL,
-    NEXT_PUBLIC_HTTP_BACKEND: process.env.NEXT_PUBLIC_HTTP_BACKEND,
     NEXT_PUBLIC_DATABASE_URL: process.env.NEXT_PUBLIC_DATABASE_URL,
   },
+  transpilePackages: [
+    "@repo/db",
+    "@repo/common",
+    "@repo/backend-common",
+  ],
 };
 
 export default nextConfig;
