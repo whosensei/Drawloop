@@ -72,6 +72,15 @@ importers:
       '@radix-ui/react-tooltip':
         specifier: ^1.2.0
         version: 1.2.0(@types/react-dom@19.0.3(@types/react@19.0.8))(@types/react@19.0.8)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      '@repo/backend-common':
+        specifier: workspace:*
+        version: link:../../packages/backend-common
+      '@repo/common':
+        specifier: workspace:*
+        version: link:../../packages/common
+      '@repo/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@types/axios':
         specifier: ^0.14.4
         version: 0.14.4
@@ -133,15 +142,6 @@ importers:
       '@eslint/eslintrc':
         specifier: ^3
         version: 3.3.0
-      '@repo/backend-common':
-        specifier: workspace:*
-        version: link:../../packages/backend-common
-      '@repo/common':
-        specifier: workspace:*
-        version: link:../../packages/common
-      '@repo/db':
-        specifier: workspace:*
-        version: link:../../packages/db
       '@tailwindcss/postcss':
         specifier: ^4
         version: 4.0.17
