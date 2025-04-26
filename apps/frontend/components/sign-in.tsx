@@ -13,7 +13,6 @@ import { Label } from "@/components/ui/label"
 import { Toggle } from "@/components/ui/toggle"
 import { useToast } from "@/components/ui/use-toast"
 import axios from "axios"
-import { BackendNote } from "./ui/backendnote"
 
 function TestCredentials({ onUseTestAccount }: { onUseTestAccount: () => void }) {
     return (
@@ -247,7 +246,6 @@ export default function SignIn() {
                             )}
                         </Button>
                     </form>
-                    <BackendNote message="Sign-in" />
                 </motion.div>
 
                 <motion.div

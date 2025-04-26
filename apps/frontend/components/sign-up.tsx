@@ -13,7 +13,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Toggle } from "@/components/ui/toggle"
 import { useToast } from "@/components/ui/use-toast"
-import { BackendNote } from "./ui/backendnote"
 import axios from "axios"
 
 
@@ -235,7 +234,6 @@ export default function SignUp() {
                             )}
                         </Button>
                     </form>
-                    <BackendNote message="Sign-up"/>
                 </motion.div>
 
                 <motion.div
