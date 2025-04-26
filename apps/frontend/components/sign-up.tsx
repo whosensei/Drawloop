@@ -44,7 +44,7 @@ export default function SignUp() {
         setTimeout(async () => {
             setIsLoading(false)
             try{
-                const message = await axios.post(`${process.env.NEXT_PUBLIC_HTTP_BACKEND}/signup`,{
+                const message = await axios.post('/api/signup',{
                     email :email,
                     username :username,
                     password: password
@@ -58,7 +58,7 @@ export default function SignUp() {
                       })
                       
                       try {
-                        const signInResponse = await axios.post(`${process.env.NEXT_PUBLIC_HTTP_BACKEND}/signin`, {
+                        const signInResponse = await axios.post('/api/signin', {
                           email: email,
                           password: password
                         });

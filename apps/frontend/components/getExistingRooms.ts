@@ -9,7 +9,7 @@ export async function GetexistingRooms(){
             return [];
         }
         
-        const Roomsdata = await axios.get(`${process.env.NEXT_PUBLIC_HTTP_BACKEND}/rooms`,{
+        const Roomsdata = await axios.get('/api/rooms',{
             headers:{
                 'authorization' : tok
             }
@@ -31,7 +31,7 @@ export async function Createroom(newRoomName:string) {
     try{
        const tok = localStorage.getItem("token");
         if(!tok) return " "
-        const msg = await axios.post(`${process.env.NEXT_PUBLIC_HTTP_BACKEND}/create-room`,{
+        const msg = await axios.post('/api/create-room',{
           name : newRoomName
         },{
           headers:{
@@ -50,7 +50,7 @@ export async function LeaveRoom(roomId: number) {
         const token = localStorage.getItem("token");
         if (!token) throw new Error("Authentication required");
 
-        const response = await axios.delete(`${process.env.NEXT_PUBLIC_HTTP_BACKEND}/delete-room/${roomId}`, {
+        const response = await axios.delete(`/api/delete-room/${roomId}`, {
             headers: {
                 'authorization': token
             }

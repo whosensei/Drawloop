@@ -255,12 +255,12 @@ export default function Dashboard() {
         throw new Error("Authentication required");
       }
 
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_HTTP_BACKEND}/add-user-to-room`, {
+      const response = await axios.post('/api/add-user-to-room', {
         roomId: id
       }, {
         headers: {
-          'Authorization': token
-        },
+          'authorization': token
+        }
       });
 
       const data = response.data;

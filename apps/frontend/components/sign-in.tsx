@@ -90,7 +90,7 @@ export default function SignIn() {
             setIsLoading(false)
 
             try {
-                const res = await axios.post(`${process.env.NEXT_PUBLIC_HTTP_BACKEND}/signin`, {
+                const res = await axios.post('/api/signin', {
                     email: email,
                     password: password
                 })

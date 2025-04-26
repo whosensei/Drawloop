@@ -1,7 +1,7 @@
 import axios from "axios";
 
 export async function getExistingShapes(roomId: string) {
-    const res = await axios.get(`${process.env.NEXT_PUBLIC_HTTP_BACKEND!}/chats/${roomId}`);
+    const res = await axios.get(`/api/chats/${roomId}`);
     const messages = res.data.messages;
 
     const shapes = messages.map((x: { message: string }) => {
@@ -18,7 +18,7 @@ export async function deleteShapes(roomId: string, shapeIds: string[]) {
         return; // Nothing to delete
     }
     try {
-        await axios.delete(`${process.env.NEXT_PUBLIC_HTTP_BACKEND!}/shapes`, {
+        await axios.delete(`/api/shapes`, {
             data: { roomId, shapeIds }, // Send data in the body for DELETE request
         });
     } catch (error) {
