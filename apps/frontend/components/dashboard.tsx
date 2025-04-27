@@ -46,10 +46,12 @@ function ClayRoomCard({
   room,
   onJoin,
   onDelete,
+  isJoining,
 }: {
   room: UIRoom
   onJoin: () => void
   onDelete: () => void
+  isJoining: boolean
 }) {
 
   const colorMap: Record<string, { light: string; medium: string; dark: string }> = {
@@ -116,7 +118,7 @@ function ClayRoomCard({
               onClick={onJoin}
             >
               <ExternalLink className="h-4 w-4" />
-              <span>Join</span>
+              <span>{isJoining ? "Joining..." : "Join"}</span>
             </Button>
             <Button
               variant="outline"
@@ -139,6 +141,7 @@ export default function Dashboard() {
   const [newRoomName, setNewRoomName] = useState("")
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
+  const [joiningroomId ,setJoiningroomId] = useState<string|null>(null)
   const [refreshTrigger, setRefreshTrigger] = useState(() => Date.now())
   const { toast } = useToast()
 
@@ -195,8 +198,6 @@ export default function Dashboard() {
       setNewRoomName("");
       setIsCreateDialogOpen(false);
       
-      // Instead of manually updating rooms state, we use the refreshTrigger
-      // to fetch fresh data from the server
       setRefreshTrigger(prev => prev + 1);
       
       toast({
@@ -241,14 +242,13 @@ export default function Dashboard() {
 
   const handleJoinRoom = async (id: string) => {
     try {
-      // First find the room to get the name
+      setJoiningroomId(id)
       const roomToJoin = rooms.find(room => room.id.toString() === id);
       
       if (!roomToJoin) {
         throw new Error("Room not found");
       }
 
-      // Call the backend API to add the user to the room
       const token = localStorage.getItem("token");
       if (!token) {
         throw new Error("Authentication required");
@@ -280,7 +280,6 @@ export default function Dashboard() {
         description: `You are now joining "${roomToJoin.name}".`,
       });
       
-      // Redirect to the canvas page with the room ID
       setTimeout(() => {
         window.location.href = `/canvas/${id}`;
       }, 1000);
@@ -291,6 +290,8 @@ export default function Dashboard() {
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to join the room. Please try again."
       });
+    }finally{
+      setJoiningroomId(null)
     }
   }
 
@@ -400,6 +401,7 @@ export default function Dashboard() {
               room={room}
               onJoin={() => handleJoinRoom((room.id).toString())}
               onDelete={() => handleDeleteRoom(room.id, room.name)}
+              isJoining={joiningroomId === room.id.toString()}
             />
           ))}
         </div>

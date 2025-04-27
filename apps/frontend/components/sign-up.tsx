@@ -39,9 +39,7 @@ export default function SignUp() {
         e.preventDefault()
         setIsLoading(true)
 
-        // Simulate registration delay
         setTimeout(async () => {
-            setIsLoading(false)
             try{
                 const message = await axios.post('/api/signup',{
                     email :email,

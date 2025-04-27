@@ -79,8 +79,6 @@ export default function SignIn() {
         setIsLoading(true)
 
         setTimeout(async () => {
-            setIsLoading(false)
-
             try {
                 const res = await axios.post('/api/signin', {
                     email: email,
