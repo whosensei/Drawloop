@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { LogOut, Plus, Trash2, ExternalLink, Info, Search } from "lucide-react"
+import { LogOut, Plus, Trash2, ExternalLink, Info, Search,Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Toggle } from "@/components/ui/toggle"
 import {
@@ -117,7 +117,7 @@ function ClayRoomCard({
               className={`flex-1 gap-2 border-white/10 bg-gradient-to-r ${colors.light} hover:bg-white/10`}
               onClick={onJoin}
             >
-              <ExternalLink className="h-4 w-4" />
+              {isJoining ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
               <span>{isJoining ? "Joining..." : "Join"}</span>
             </Button>
             <Button
@@ -197,7 +197,7 @@ export default function Dashboard() {
 
       setNewRoomName("");
       setIsCreateDialogOpen(false);
-      
+
       setRefreshTrigger(prev => prev + 1);
       
       toast({
