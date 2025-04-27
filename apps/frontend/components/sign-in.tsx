@@ -14,38 +14,38 @@ import { Toggle } from "@/components/ui/toggle"
 import { useToast } from "@/components/ui/use-toast"
 import axios from "axios"
 
-function TestCredentials({ onUseTestAccount }: { onUseTestAccount: () => void }) {
-    return (
-        <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm p-4 mb-6">
-            <div className="flex items-center gap-2 mb-3">
-                <Info className="h-4 w-4 text-indigo-400" />
-                <h3 className="text-sm font-medium text-white">Demo Credentials</h3>
-            </div>
+// function TestCredentials({ onUseTestAccount }: { onUseTestAccount: () => void }) {
+//     return (
+//         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm p-4 mb-6">
+//             <div className="flex items-center gap-2 mb-3">
+//                 <Info className="h-4 w-4 text-indigo-400" />
+//                 <h3 className="text-sm font-medium text-white">Demo Credentials</h3>
+//             </div>
 
-            <div className="space-y-2 mb-4">
-                <div className="grid grid-cols-[80px_1fr] text-sm">
-                    <span className="text-white/60">Email:</span>
-                    <code className="font-Open_Sans text-indigo-300">demo@sketchboard.com</code>
-                </div>
-                <div className="grid grid-cols-[80px_1fr] text-sm">
-                    <span className="text-white/60">Password:</span>
-                    <code className="font-Open_Sans text-indigo-300">demo1234</code>
-                </div>
-            </div>
+//             <div className="space-y-2 mb-4">
+//                 <div className="grid grid-cols-[80px_1fr] text-sm">
+//                     <span className="text-white/60">Email:</span>
+//                     <code className="font-Open_Sans text-indigo-300">demo@sketchboard.com</code>
+//                 </div>
+//                 <div className="grid grid-cols-[80px_1fr] text-sm">
+//                     <span className="text-white/60">Password:</span>
+//                     <code className="font-Open_Sans text-indigo-300">demo1234</code>
+//                 </div>
+//             </div>
 
-            <Button
-                variant="outline"
-                size="sm"
-                className="w-full text-xs border-indigo-500/20 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300"
-                onClick={onUseTestAccount}
-            >
-                Use Test Account
-            </Button>
+//             <Button
+//                 variant="outline"
+//                 size="sm"
+//                 className="w-full text-xs border-indigo-500/20 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300"
+//                 onClick={onUseTestAccount}
+//             >
+//                 Use Test Account
+//             </Button>
 
-            <p className="text-[11px] text-white/40 mt-3 text-center">For demonstration purposes only</p>
-        </div>
-    )
-}
+//             <p className="text-[11px] text-white/40 mt-3 text-center">For demonstration purposes only</p>
+//         </div>
+//     )
+// }
 
 export default function SignIn() {
     const [showPassword, setShowPassword] = useState(false)
@@ -53,33 +53,26 @@ export default function SignIn() {
     const [password, setPassword] = useState("")
     const [isLoading, setIsLoading] = useState(false)
     const [redirectUrl, setRedirectUrl] = useState("")
-    // const [shareRoom, setShareRoom] = useState(false)
     const { toast } = useToast()
 
-    // Read URL parameters on component mount
     useEffect(() => {
         const queryParams = new URLSearchParams(window.location.search);
         const redirectParam = queryParams.get('redirectUrl');
-        // const shareRoomParam = queryParams.get('shareRoom');
         
         if (redirectParam) {
             setRedirectUrl(redirectParam);
         }
-        
-        // if (shareRoomParam === 'true') {
-        //     setShareRoom(true);
-        // }
     }, []);
 
-    const handleUseTestAccount = () => {
-        setEmail("demo@sketchboard.com")
-        setPassword("demo1234")
-        toast({
-            variant: "info",
-            title: "Test Account Applied",
-            description: "Demo credentials have been filled automatically.",
-        })
-    }
+    // const handleUseTestAccount = () => {
+    //     setEmail("demo@sketchboard.com")
+    //     setPassword("demo1234")
+    //     toast({
+    //         variant: "info",
+    //         title: "Test Account Applied",
+    //         description: "Demo credentials have been filled automatically.",
+    //     })
+    // }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -108,7 +101,7 @@ export default function SignIn() {
                         } else {
                             window.location.href = "/dashboard";
                         }
-                    }, 1000)
+                    }, 500)
                 }
             } catch(error) {
                 if (axios.isAxiosError(error)) {
@@ -183,8 +176,7 @@ export default function SignIn() {
                 </motion.div>
 
                 <motion.div custom={2} variants={fadeUpVariants} initial="hidden" animate="visible">
-                    {/* Add the TestCredentials component here */}
-                    <TestCredentials onUseTestAccount={handleUseTestAccount} />
+                    {/* <TestCredentials onUseTestAccount={handleUseTestAccount} /> */}
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="space-y-2">

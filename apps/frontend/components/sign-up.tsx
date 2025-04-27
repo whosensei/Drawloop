@@ -72,7 +72,7 @@ export default function SignUp() {
                             } else {
                               window.location.href = "/dashboard";
                             }
-                          }, 1000);
+                          }, 500);
                         }
                       } catch (signInError) {
                         console.error("Auto sign-in failed:", signInError);
