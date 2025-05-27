@@ -8,9 +8,7 @@ import DrawingToolbarProps from "./toolbar";
 import BacktoDashboard from "./backtodashboard";
 import { ThemeToggle } from "./theme-toggle";
 
-// import { WebSocket } from "ws";
 
-// export type Tool = "pen"|"line" | "circle" | "rectangle" | "eraser" | null;
 export type Tool = "rectangle" | "triangle" | "circle" | "arrow" | "line" | "pen" |"eraser"| null
 
 export type StrokeThickness = "1" | "3" | "6"
