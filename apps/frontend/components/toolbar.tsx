@@ -149,7 +149,6 @@ export default function DrawingToolbar({
     try {
       setclear(true)
       await clearAll(roomId)
-      setSelectedTool(null)
       console.log("Clear all successful")
     } catch (error) {
       console.error("Failed to clear canvas:", error)
