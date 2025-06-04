@@ -17,7 +17,15 @@ export async function GET(request: Request, { params }: { params: Promise<{ room
       orderBy: [desc(chats.createdAt)],
       limit: 100,
     });
-    return NextResponse.json({ messages });
+    
+    const response = NextResponse.json({ messages });
+    
+    // Prevent caching to ensure fresh drawing data
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    
+    return response;
   } catch (error) {
     console.error(error);
     return NextResponse.json({ message: 'Failed to fetch chats' }, { status: 500 });

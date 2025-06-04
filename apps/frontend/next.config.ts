@@ -59,6 +59,15 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        source: '/api/chats/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate'
+          }
+        ]
+      },
+      {
         source: '/api/(.*)',
         headers: [
           {

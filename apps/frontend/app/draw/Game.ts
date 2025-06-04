@@ -127,14 +127,23 @@ export class Game {
     }
 
     async init() {
-        this.existingShapes = await getExistingShapes(this.roomId);
-        this.existingShapes = this.existingShapes.map(shape => {
-            if (shape.type !== 'eraser' && !shape.id) {
-                shape.id = this.generateUniqueId();
-            }
-            return shape;
-        }).filter(shape => shape.type !== 'eraser');
-        this.clearCanvas();
+        try {
+            console.log(`Loading existing shapes for room ${this.roomId}...`);
+            this.existingShapes = await getExistingShapes(this.roomId);
+            this.existingShapes = this.existingShapes.map(shape => {
+                if (shape.type !== 'eraser' && !shape.id) {
+                    shape.id = this.generateUniqueId();
+                }
+                return shape;
+            }).filter(shape => shape.type !== 'eraser');
+            console.log(`Loaded ${this.existingShapes.length} shapes for room ${this.roomId}`);
+            this.clearCanvas();
+        } catch (error) {
+            console.error(`Failed to load existing shapes for room ${this.roomId}:`, error);
+            // Continue with empty shapes array
+            this.existingShapes = [];
+            this.clearCanvas();
+        }
     }
 
     private generateUniqueId(): string {
