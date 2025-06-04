@@ -39,6 +39,7 @@ A real-time collaborative drawing application built with Next.js, WebSocket, and
 ### Prerequisites
 - Node.js 18+ 
 - pnpm 9.0.0+
+- Database (PostgreSQL recommended)
 
 ### Installation
 
@@ -53,7 +54,15 @@ A real-time collaborative drawing application built with Next.js, WebSocket, and
    pnpm install
    ```
 
-3. **Start development servers**
+3. **Set up environment variables**
+   ```env
+   NEXT_PUBLIC_WS_URL=""
+   NEXT_PUBLIC_DATABASE_URL=""
+   NEXT_PUBLIC_FRONTEND_URL=""
+   JWT_SECRET=""
+   ```
+
+4. **Start development servers**
    ```bash
    pnpm dev
    ```
@@ -62,7 +71,7 @@ A real-time collaborative drawing application built with Next.js, WebSocket, and
    - Frontend (Next.js): `http://localhost:3000`
    - WebSocket Backend: `ws://localhost:8080`
 
-4. **Open your browser**
+5. **Open your browser**
    Navigate to `http://localhost:3000` and start drawing!
 
 ## 🏗️ Project Structure
@@ -166,13 +175,6 @@ We welcome contributions! Please see our contributing guidelines for more detail
 ## 📝 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🙏 Acknowledgments
-
-- Built with [Next.js](https://nextjs.org/)
-- UI components from [shadcn/ui](https://ui.shadcn.com/)
-- Icons by [Lucide](https://lucide.dev/)
-- Monorepo setup with [Turborepo](https://turbo.build/repo)
 
 ---
 
