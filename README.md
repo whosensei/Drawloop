@@ -1,120 +1,179 @@
-# Turborepo starter
+# Drawloop 🎨
 
-This Turborepo starter is maintained by the Turborepo core team.
+![Drawloop Hero](./assets/hero-image.png)
 
-## Using this example
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/whosensei/Drawloop)
 
-Run the following command:
+A real-time collaborative drawing application built with Next.js, WebSocket, and modern web technologies. Create, share, and collaborate on drawings with multiple users in real-time with end-to-end encryption.
 
-```sh
-npx create-turbo@latest
+## ✨ Features
+
+### 🎯 Drawing Tools
+- **Shapes**: Rectangle, Triangle, Circle, Arrow, Line
+- **Freehand**: Pen tool for free drawing
+- **Eraser**: Smart eraser with shape detection
+- **Text**: Add text annotations to your drawings
+
+### 🎨 Customization
+- **Colors**: Preset color palette + custom color picker
+- **Stroke & Fill**: Independent stroke and fill color selection
+- **Thickness**: Adjustable stroke width (1-8px)
+- **Background**: Multiple background color options
+- **Themes**: Light and dark mode support
+
+### 🤝 Collaboration
+- **Real-time sync**: See changes as they happen
+- **Room-based**: Join specific drawing rooms with unique IDs
+- **Multi-user**: Multiple users can draw simultaneously
+- **End-to-end encryption**: Secure collaborative sessions
+- **Live cursor tracking**: See where others are drawing
+
+### 🔒 Security & Control
+- **Canvas locking**: Prevent accidental modifications
+- **Secure sharing**: End-to-end encrypted room sharing
+- **Export functionality**: Save drawings as PNG images
+- **Persistent storage**: Drawings are saved and restored
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 18+ 
+- pnpm 9.0.0+
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/your-username/Drawloop.git
+   cd Drawloop
+   ```
+
+2. **Install dependencies**
+   ```bash
+   pnpm install
+   ```
+
+3. **Start development servers**
+   ```bash
+   pnpm dev
+   ```
+
+   This will start:
+   - Frontend (Next.js): `http://localhost:3000`
+   - WebSocket Backend: `ws://localhost:8080`
+
+4. **Open your browser**
+   Navigate to `http://localhost:3000` and start drawing!
+
+## 🏗️ Project Structure
+
+This is a monorepo built with [Turborepo](https://turbo.build/repo) containing:
+
+### Apps
+- **`apps/frontend`**: Next.js application with React 19, TypeScript, and Tailwind CSS
+- **`apps/ws-backend`**: WebSocket server for real-time communication
+
+### Packages
+- **`@repo/ui`**: Shared React component library
+- **`@repo/db`**: Database schema and utilities with Drizzle ORM
+- **`@repo/backend-common`**: Shared backend utilities
+- **`@repo/common`**: Shared utilities across all services
+- **`@repo/eslint-config`**: ESLint configurations
+- **`@repo/typescript-config`**: TypeScript configurations
+
+## 🛠️ Technology Stack
+
+### Frontend
+- **Framework**: Next.js 15.2.4 with React 19
+- **Styling**: Tailwind CSS v4 + shadcn/ui components
+- **State Management**: React hooks + WebSocket integration
+- **Icons**: Lucide React
+- **Animations**: Framer Motion
+- **Theme**: Light/Dark mode support
+
+### Backend
+- **WebSocket**: Native WebSocket server with real-time messaging
+- **Database**: Drizzle ORM
+- **Authentication**: JWT tokens
+- **Environment**: Node.js with TypeScript
+
+### Development Tools
+- **Monorepo**: Turborepo for build orchestration
+- **Package Manager**: pnpm with workspaces
+- **Code Quality**: ESLint + Prettier
+- **Type Safety**: TypeScript throughout
+
+## 📜 Available Scripts
+
+### Development
+```bash
+# Start all services in development mode
+pnpm dev
+
+# Start individual services
+pnpm dev --filter=frontend
+pnpm dev --filter=ws-backend
 ```
 
-## What's inside?
-
-This Turborepo includes the following packages/apps:
-
-### Apps and Packages
-
-- `frontend`: a [Next.js](https://nextjs.org/) app
-- `http-backend`: Express.js HTTP API server
-- `ws-backend`: WebSocket server
-- `@repo/ui`: a React component library shared by the applications
-- `@repo/db`: database schema and utilities
-- `@repo/backend-common`: shared utilities for backend services
-- `@repo/common`: shared utilities for all services
-- `@repo/eslint-config`: `eslint` configurations
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-```
+### Production
+```bash
+# Build all applications
 pnpm build
-```
 
-To build individual services:
-
-```
-# Build the frontend
+# Build individual applications
 pnpm build:frontend
-
-# Build the HTTP backend
-pnpm build:http-backend
-
-# Build the WebSocket backend
 pnpm build:ws-backend
-```
 
-### Start
-
-To start all services in parallel, run:
-
-```
+# Start production servers
 pnpm start
 ```
 
-To start individual services:
+### Code Quality
+```bash
+# Lint all code
+pnpm lint
 
-```
-# Start the frontend
-pnpm start:frontend
+# Format code with Prettier
+pnpm format
 
-# Start the HTTP backend
-pnpm start:http-backend
-
-# Start the WebSocket backend
-pnpm start:ws-backend
-```
-
-### Develop
-
-To develop all apps and packages, run the following command:
-
-```
-pnpm dev
+# Type checking
+pnpm check-types
 ```
 
-### Remote Caching
+## 🎮 How to Use
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+1. **Create or Join a Room**: Enter a room ID or create a new one
+2. **Select Tools**: Choose from rectangle, circle, pen, eraser, and more
+3. **Customize**: Pick colors, adjust thickness, change background
+4. **Collaborate**: Share the room link with others for real-time collaboration
+5. **Save**: Export your creation as a PNG image
 
-Turborepo can use a technique known as [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+### Keyboard Shortcuts
+- **Lock Canvas**: Prevent accidental edits
+- **Clear All**: Remove all drawings from the canvas
+- **Theme Toggle**: Switch between light and dark modes
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+## 🤝 Contributing
 
-```
-cd my-turborepo
-npx turbo login
-```
+We welcome contributions! Please see our contributing guidelines for more details.
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit your changes: `git commit -m 'Add amazing feature'`
+4. Push to the branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+## 📝 License
 
-```
-npx turbo link
-```
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Useful Links
+## 🙏 Acknowledgments
 
-Learn more about the power of Turborepo:
+- Built with [Next.js](https://nextjs.org/)
+- UI components from [shadcn/ui](https://ui.shadcn.com/)
+- Icons by [Lucide](https://lucide.dev/)
+- Monorepo setup with [Turborepo](https://turbo.build/repo)
 
-- [Tasks](https://turbo.build/repo/docs/core-concepts/monorepos/running-tasks)
-- [Caching](https://turbo.build/repo/docs/core-concepts/caching)
-- [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching)
-- [Filtering](https://turbo.build/repo/docs/core-concepts/monorepos/filtering)
-- [Configuration Options](https://turbo.build/repo/docs/reference/configuration)
-- [CLI Usage](https://turbo.build/repo/docs/reference/command-line-reference)
+---
+
+**Happy Drawing! 🎨✨**
