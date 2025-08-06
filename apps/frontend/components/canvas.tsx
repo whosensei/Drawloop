@@ -23,13 +23,15 @@ export function Canvas({ roomId, socket }:
     const [clear, setclear] = useState<true | false>(false)
     const [thickness, setThickness] = useState<StrokeThickness>("1")
     const [game, setGame] = useState<Game>();
+    
+    const isRemoteUpdate = useRef(false);
 
-    // Wrapper function to handle type conversion
     const handleThicknessChange = (value: string) => {
         setThickness(value as StrokeThickness);
     }
 
     const handleBgColorChange = (color: string) => {
+        isRemoteUpdate.current = true; 
         setSelectedbgColor(color);
     }
 
@@ -50,9 +52,14 @@ export function Canvas({ roomId, socket }:
     useEffect(() => {
         game?.setTool(selectedTool);
         game?.setColor(selectedColor);
-        game?.setBgColor(selectedbgColor, false); 
         game?.setThickness(thickness);
-    }, [selectedTool, selectedColor, selectedbgColor, thickness, game]);
+    }, [selectedTool, selectedColor, thickness, game]);
+
+    useEffect(() => {
+        if (game) {
+            game.setBgColor(selectedbgColor, false);
+        }
+    }, [selectedbgColor]); 
 
     useEffect(() => {
         if (clear && game) {
