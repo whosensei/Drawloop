@@ -65,6 +65,17 @@ export function Canvas({ roomId, socket }:
             const g = new Game(Canvasref.current, roomId, socket, handleBgColorChange);
             setGame(g);
 
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                const settingsMessage = JSON.stringify({
+                    type: "settings",
+                    roomId: roomId,
+                    data: {
+                        selectedbgColor: selectedbgColor
+                    }
+                });
+                socket.send(settingsMessage);
+            }
+
             return () => {
                 g.destroy();
             }
