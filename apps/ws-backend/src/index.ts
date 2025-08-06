@@ -129,6 +129,31 @@ wss.on("connection",(ws,request)=>{
                     });
                     break;
 
+                case "settings" :
+                    const { selectedbgColor } = parsedData.data;
+
+                    console.log("ws-backend settings")
+                      // Broadcast to other users in the room
+                      const settingsMessage = JSON.stringify({
+                        type: "settings",
+                        roomId: parsedData.roomId,
+                        data: {
+                            selectedbgColor: selectedbgColor
+                        }
+                    });
+
+                    users.forEach(u => {
+                        if (u.rooms.includes(parsedData.roomId) && u.id !== userId) {
+                            try {
+                                console.log("msg sent")
+                                u.ws.send(settingsMessage);
+                            } catch (error) {
+                                console.error(error);
+                            }
+                        }
+                    });
+                    break;
+
                 default:
                     console.log("Unknown message type:", parsedData.type);
             }

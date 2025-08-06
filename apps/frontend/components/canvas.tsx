@@ -8,9 +8,7 @@ import DrawingToolbarProps from "./toolbar";
 import BacktoDashboard from "./backtodashboard";
 import { ThemeToggle } from "./theme-toggle";
 
-
 export type Tool = "rectangle" | "triangle" | "circle" | "arrow" | "line" | "pen" |"eraser"| null
-
 export type StrokeThickness = "1" | "3" | "6"
 
 export function Canvas({ roomId, socket }:
@@ -18,7 +16,6 @@ export function Canvas({ roomId, socket }:
         socket: WebSocket,
         roomId: string
     }) {
-
 
     const [selectedTool, setSelectedTool] = useState<Tool>(null)
     const [selectedColor, setSelectedColor] = useState("#FFFFFF")
@@ -30,6 +27,10 @@ export function Canvas({ roomId, socket }:
     // Wrapper function to handle type conversion
     const handleThicknessChange = (value: string) => {
         setThickness(value as StrokeThickness);
+    }
+
+    const handleBgColorChange = (color: string) => {
+        setSelectedbgColor(color);
     }
 
     const Canvasref = useRef<HTMLCanvasElement>(null);
@@ -49,7 +50,7 @@ export function Canvas({ roomId, socket }:
     useEffect(() => {
         game?.setTool(selectedTool);
         game?.setColor(selectedColor);
-        game?.setBgColor(selectedbgColor);
+        game?.setBgColor(selectedbgColor, false); 
         game?.setThickness(thickness);
     }, [selectedTool, selectedColor, selectedbgColor, thickness, game]);
 
@@ -60,16 +61,14 @@ export function Canvas({ roomId, socket }:
     }, [clear, game]);
 
     useEffect(() => {
-
         if (Canvasref.current) {
-            const g = new Game(Canvasref.current, roomId, socket);
+            const g = new Game(Canvasref.current, roomId, socket, handleBgColorChange);
             setGame(g);
 
             return () => {
                 g.destroy();
             }
         }
-
     }, [Canvasref])
 
     return (

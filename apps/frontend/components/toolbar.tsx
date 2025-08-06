@@ -133,11 +133,11 @@ export default function DrawingToolbar({
     }
   }, [selectedColor]);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('selectedbgColor', selectedbgColor);
-    }
-  }, [selectedbgColor]);
+  // useEffect(() => {
+  //   if (typeof window !== 'undefined') {
+  //     localStorage.setItem('selectedbgColor', selectedbgColor);
+  //   }
+  // }, [selectedbgColor]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {

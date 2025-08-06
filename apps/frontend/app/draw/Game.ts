@@ -82,10 +82,11 @@ export class Game {
     private lastX: number = 0;
     private lastY: number = 0;
     private shapesToErase: Set<string> = new Set();
+    private onBgColorChange?: (color: string) => void;
 
     socket: WebSocket;
 
-    constructor(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket) {
+    constructor(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket, onBgColorChange?: (color: string) => void) {
         this.canvas = canvas;
         this.ctx = canvas.getContext("2d")!;
         this.existingShapes = [];
@@ -93,6 +94,7 @@ export class Game {
         this.socket = socket;
         this.clicked = false;
         this.hasTouch = 'ontouchstart' in window;
+        this.onBgColorChange = onBgColorChange;
         this.init();
         this.initHandlers();
         this.initMouseHandlers();
@@ -116,9 +118,20 @@ export class Game {
         this.clearCanvas();
     }
 
-    setBgColor(color: string) {
+    setBgColor(color: string,fromRemote: boolean = false) {
         this.selectedbgColor = color;
         this.clearCanvas();
+        
+        if (!fromRemote) {
+            const settingsMessage = JSON.stringify({
+                type: "settings",
+                roomId: this.roomId,
+                data: {
+                    selectedbgColor: color
+                }
+            });
+            this.socket.send(settingsMessage);
+        }
     }
 
     setThickness(thickness: StrokeThickness) {
@@ -147,7 +160,7 @@ export class Game {
     }
 
     private generateUniqueId(): string {
-        return Date.now() + Math.random().toString(36).substr(2, 9);
+        return Date.now() + Math.random().toString(36).substring(2, 11);
     }
 
     initHandlers() {
@@ -178,6 +191,16 @@ export class Game {
                         }
                     } else {
                         console.warn("Received message with unknown shape type:", shapedata);
+                    }
+                }
+                if (msg.type === "settings") {
+                    console.log("recieved settings,",msg)
+                    if (msg.data && msg.data.selectedbgColor) {
+                        this.setBgColor(msg.data.selectedbgColor, true);
+                        
+                        if (this.onBgColorChange) {
+                            this.onBgColorChange(msg.data.selectedbgColor);
+                        }
                     }
                 }
             } catch (error) {
@@ -286,8 +309,8 @@ export class Game {
         if (this.isAddingText) return;
         
         const pos = this.getEventPosition(e);
-        let currentX = pos.x;
-        let currentY = pos.y;
+        const currentX = pos.x;
+        const currentY = pos.y;
 
         const distance = Math.sqrt((currentX - this.startX) ** 2 + (currentY - this.startY) ** 2);
         const minimumDistance = 5;
@@ -420,8 +443,8 @@ export class Game {
         if (!this.drawing) return;
         
         const pos = this.getEventPosition(e);
-        let currentX = pos.x;
-        let currentY = pos.y;
+        const currentX = pos.x;
+        const currentY = pos.y;
         
         if ('touches' in e) {
             e.preventDefault();
