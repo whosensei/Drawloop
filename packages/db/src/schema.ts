@@ -11,6 +11,7 @@ export const User = pgTable("users", {
 export const Room = pgTable("rooms", {
     id: serial("room_id").primaryKey(),
     name: text("room_name").notNull(),
+    roomSettings: text("room_settings").default('{}'),
     createdAt: timestamp("created_at").defaultNow(),
     adminId: integer("admin_id").notNull(),
     members : integer("members")

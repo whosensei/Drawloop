@@ -20,18 +20,19 @@ export function Canvas({ roomId, socket }:
     const [selectedTool, setSelectedTool] = useState<Tool>(null)
     const [selectedColor, setSelectedColor] = useState("#FFFFFF")
     const [selectedbgColor, setSelectedbgColor] = useState("#121212")
+    const suppressBgBroadcastRef = useRef(false)
     const [clear, setclear] = useState<true | false>(false)
     const [thickness, setThickness] = useState<StrokeThickness>("1")
     const [game, setGame] = useState<Game>();
+    const [isBgReady, setIsBgReady] = useState(false)
     
-    const isRemoteUpdate = useRef(false);
 
     const handleThicknessChange = (value: string) => {
         setThickness(value as StrokeThickness);
     }
 
     const handleBgColorChange = (color: string) => {
-        isRemoteUpdate.current = true; 
+        suppressBgBroadcastRef.current = true
         setSelectedbgColor(color);
     }
 
@@ -49,6 +50,7 @@ export function Canvas({ roomId, socket }:
         }
     };
 
+
     useEffect(() => {
         game?.setTool(selectedTool);
         game?.setColor(selectedColor);
@@ -56,10 +58,15 @@ export function Canvas({ roomId, socket }:
     }, [selectedTool, selectedColor, thickness, game]);
 
     useEffect(() => {
-        if (game) {
+        if (!game) return;
+        if (suppressBgBroadcastRef.current) {
+            game.setBgColor(selectedbgColor, true);
+            suppressBgBroadcastRef.current = false;
+        } else {
             game.setBgColor(selectedbgColor, false);
         }
-    }, [selectedbgColor]); 
+    }, [selectedbgColor, game]); 
+
 
     useEffect(() => {
         if (clear && game) {
@@ -68,32 +75,45 @@ export function Canvas({ roomId, socket }:
     }, [clear, game]);
 
     useEffect(() => {
+        let cancelled = false
+        ;(async () => {
+            try {
+                const res = await fetch(`/api/rooms/${roomId}/settings`)
+                const data = await res.json()
+                if (!cancelled && data && typeof data.selectedbgColor === 'string') {
+                    suppressBgBroadcastRef.current = true
+                    setSelectedbgColor(data.selectedbgColor)
+                }
+            } catch {
+                suppressBgBroadcastRef.current = true
+                setSelectedbgColor('#121212')
+            } finally {
+                if (!cancelled) setIsBgReady(true)
+            }
+        })()
+        return () => { cancelled = true }
+    }, [roomId])
+
+    // Initialize game only after bg color is known
+    useEffect(() => {
+        if (!isBgReady) return
         if (Canvasref.current) {
             const g = new Game(Canvasref.current, roomId, socket, handleBgColorChange);
             setGame(g);
-
-            if (socket && socket.readyState === WebSocket.OPEN) {
-                const settingsMessage = JSON.stringify({
-                    type: "settings",
-                    roomId: roomId,
-                    data: {
-                        selectedbgColor: selectedbgColor
-                    }
-                });
-                socket.send(settingsMessage);
-            }
-
-            return () => {
-                g.destroy();
-            }
+            return () => { g.destroy() }
         }
-    }, [Canvasref])
+    }, [Canvasref, isBgReady, roomId, socket])
 
     return (
         <div style={{
             height: "100vh",
             overflow: "hidden"
         }}>
+            {!isBgReady && (
+                <div className="fixed inset-0 flex items-center justify-center z-50" style={{ background: "#0b0b0b" }}>
+                    <div className="text-white/80">Loading room…</div>
+                </div>
+            )}
             <canvas ref={Canvasref} width={window.innerWidth} height={window.innerHeight}></canvas>
 
             <div className="absolute top-1/40 right-7">

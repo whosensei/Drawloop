@@ -196,7 +196,9 @@ export class Game {
                 if (msg.type === "settings") {
                     console.log("recieved settings,",msg)
                     if (msg.data && msg.data.selectedbgColor) {
-                        this.setBgColor(msg.data.selectedbgColor, true);
+                        if (this.selectedbgColor !== msg.data.selectedbgColor) {
+                            this.setBgColor(msg.data.selectedbgColor, true);
+                        }
                         
                         if (this.onBgColorChange) {
                             this.onBgColorChange(msg.data.selectedbgColor);

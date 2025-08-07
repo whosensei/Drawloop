@@ -2,9 +2,10 @@ import { WebSocketServer , WebSocket } from "ws";
 import jwt from "jsonwebtoken";
 import {JWT_SECRET} from "@repo/backend-common/config";
 import { db } from "@repo/db";
-import { chats } from "@repo/db/schema";
+import { chats, Room } from "@repo/db/schema";
 import * as dotenv from "dotenv";
 import path from "path";
+import { eq } from "drizzle-orm";
 
 // Load environment variables from the root .env file
 dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
@@ -65,6 +66,7 @@ wss.on("connection",(ws,request)=>{
     ws.on("message", async (msg) => {
         try {
             const parsedData = JSON.parse(msg.toString());
+            const { roomId } = parsedData;
             console.log("Received message:", parsedData);
 
             switch(parsedData.type) {
@@ -72,7 +74,50 @@ wss.on("connection",(ws,request)=>{
                     if (!user.rooms.includes(parsedData.roomId)) {
                         user.rooms.push(parsedData.roomId);
                         console.log(`User ${userId} joined room ${parsedData.roomId}`);
-                        
+                        // On join, send current room settings to the joining user.
+                        try {
+                            const room = await db.query.Room.findFirst({
+                                where: eq(Room.id, Number(parsedData.roomId))
+                            });
+
+                            let bgColor = "#121212"; // default
+                            try {
+                                if (room?.roomSettings) {
+                                    const roomSettings = JSON.parse(room.roomSettings || "{}");
+                                    if (roomSettings && typeof roomSettings.selectedbgColor === "string" && roomSettings.selectedbgColor.trim().length > 0) {
+                                        bgColor = roomSettings.selectedbgColor;
+                                    } else {
+                                        // Persist default if empty
+                                        await db.update(Room)
+                                            .set({ roomSettings: JSON.stringify({ selectedbgColor: bgColor }) })
+                                            .where(eq(Room.id, Number(parsedData.roomId)));
+                                    }
+                                } else {
+                                    await db.update(Room)
+                                        .set({ roomSettings: JSON.stringify({ selectedbgColor: bgColor }) })
+                                        .where(eq(Room.id, Number(parsedData.roomId)));
+                                }
+                            } catch (e) {
+                                console.warn("Failed to parse room settings; defaulting", e);
+                                await db.update(Room)
+                                    .set({ roomSettings: JSON.stringify({ selectedbgColor: bgColor }) })
+                                    .where(eq(Room.id, Number(parsedData.roomId)));
+                            }
+
+                            const settingsMessage = JSON.stringify({
+                                type: "settings",
+                                roomId: parsedData.roomId,
+                                data: { selectedbgColor: bgColor }
+                            });
+                            ws.send(settingsMessage);
+                        } catch (e) {
+                            console.error("Error loading/sending room settings on join:", e);
+                            ws.send(JSON.stringify({
+                                type: "settings",
+                                roomId: parsedData.roomId,
+                                data: { selectedbgColor: "#121212" }
+                            }));
+                        }
                         // Notify other users in the room
                         const joinMessage = JSON.stringify({
                             type: "user_joined",
@@ -94,7 +139,7 @@ wss.on("connection",(ws,request)=>{
                     break;
 
                 case "chat":
-                    const { roomId, message } = parsedData;
+                    const { message } = parsedData;
                     
                     // Store message in database
                     try {
@@ -131,10 +176,19 @@ wss.on("connection",(ws,request)=>{
 
                 case "settings" :
                     const { selectedbgColor } = parsedData.data;
-
                     console.log("ws-backend settings")
                       // Broadcast to other users in the room
-                      const settingsMessage = JSON.stringify({
+                    try{
+                        await db.update(Room).set({roomSettings: JSON.stringify({selectedbgColor})})
+                        .where(eq(Room.id, Number(roomId)));
+
+                        console.log("Entry added to db")
+                    }catch(e){
+                        console.log("Db update failed")
+                        console.log(e)
+                    }
+
+                    const settingsMessage = JSON.stringify({
                         type: "settings",
                         roomId: parsedData.roomId,
                         data: {
